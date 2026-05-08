@@ -1,40 +1,33 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import { validateCredentials } from "@/lib/auth-utils";
 import { authConfig } from "./auth.config";
-import { db } from "./db";
-import { users } from "./db/schema";
-import { eq } from "drizzle-orm";
-import bcrypt from "bcrypt";
-import { z } from "zod";
 
-export const { auth, signIn, signOut, handlers } = NextAuth({
+export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   providers: [
     Credentials({
+      ...authConfig.providers[0],
       async authorize(credentials) {
-        const parsedCredentials = z
-          .object({ username: z.string(), password: z.string().min(6) })
-          .safeParse(credentials);
-
-        if (parsedCredentials.success) {
-          const { username, password } = parsedCredentials.data;
-          const [user] = await db.select().from(users).where(eq(users.username, username));
-          
-          if (!user) return null;
-          
-          const passwordsMatch = await bcrypt.compare(password, user.passwordHash);
-
-          if (passwordsMatch) {
-            return {
-              id: user.id,
-              username: user.username,
-              role: user.role,
-              householdId: user.householdId,
-            };
-          }
+        if (!credentials?.username || !credentials?.password) {
+          return null;
         }
 
-        return null;
+        const user = await validateCredentials(
+          credentials.username as string,
+          credentials.password as string
+        );
+
+        if (!user) {
+          return null;
+        }
+
+        return {
+          id: user.id,
+          name: user.username,
+          role: user.role,
+          householdId: user.householdId,
+        };
       },
     }),
   ],

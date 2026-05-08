@@ -1,39 +1,52 @@
-import type { NextAuthConfig } from "next-auth"; // 
+import type { NextAuthConfig } from "next-auth";
+import Credentials from "next-auth/providers/credentials";
 
 export const authConfig = {
-  pages: {                    // Weiterleitung an eigene Login-Seite, da wir keine Standard-Login-Seite von NextAuth verwenden
-    signIn: "/login", 
-  },
-  callbacks: {    // Route leitet unangemeldete Benutzer auf die Login-Seite um und angemeldete Benutzer zurück zum Dashboard
-    authorized({ auth, request: { nextUrl } }) {
-      const isLoggedIn = !!auth?.user;                // Session Cookie vorhanden => Benutzer ist eingeloggt
-      const isOnDashboard = nextUrl.pathname.startsWith("/dashboard") || nextUrl.pathname === "/"; // Prüfen, ob der Benutzer auf einer geschützten Seite zugrefen möchte
-      if (isOnDashboard) {
-        if (isLoggedIn) return true;
-        return false; // Redirect to login
-      } else if (isLoggedIn) {
-        return Response.redirect(new URL("/", nextUrl)); // Weiterleitung zum Dashboard
-      }
-      return true;
-    },
-    jwt({ token, user }) {
+  secret: process.env.AUTH_SECRET || "development-secret-do-not-use-in-production",
+  providers: [
+    Credentials({
+      credentials: {
+        username: { label: "Benutzername", type: "text" },
+        password: { label: "Passwort", type: "password" },
+      },
+      // We'll provide a dummy authorize here, it will be overridden in auth.ts
+      async authorize() {
+        return null;
+      },
+    }),
+  ],
+  callbacks: {
+    async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
-        token.username = user.username;
         token.role = user.role;
         token.householdId = user.householdId;
       }
       return token;
     },
-    session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string;
-        session.user.username = token.username as string;
-        session.user.role = token.role as string;
-        session.user.householdId = token.householdId as string;
+    async session({ session, token }) {
+      if (token && session.user) {
+        session.user.id = token.sub as string;
+        session.user.role = token.role;
+        session.user.householdId = token.householdId;
       }
       return session;
     },
   },
-  providers: [], // Wird in auth.ts überschrieben
+  session: {
+    strategy: "jwt",
+  },
+  pages: {
+    signIn: "/login",
+  },
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+  },
 } satisfies NextAuthConfig;
