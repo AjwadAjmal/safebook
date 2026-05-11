@@ -14,7 +14,7 @@ Grundkonfiguration von Auth.js (NextAuth) mit dem CredentialsProvider für Benut
 - [x] Middleware schützt alle Routen außer `/login` und `/register`.
 - [x] Login-Seite mit Formular (Benutzername, Passwort) ist funktional.
 - [x] Generische Fehlermeldung bei ungültigen Anmeldedaten.
-- [x] Session verfällt beim Schließen des Browsers.
+- [x] Session verfällt nach 1 Stunde.
 
 ## Blockiert durch
 Keine – kann sofort gestartet werden.
@@ -22,5 +22,5 @@ Keine – kann sofort gestartet werden.
 ## Zugewiesene User Stories
 - **User Story 2:** Anmeldung mit Zugangsdaten.
 - **User Story 4:** Generische Fehlermeldung bei falschen Daten.
-- **User Story 5:** Sitzungsende beim Browserschluss.
+- **User Story 5:** Sitzungsende nach 1 Stunde.
 - **User Story 9:** Erneute Anmeldung beim Öffnen der App.

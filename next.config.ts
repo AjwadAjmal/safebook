@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
-  allowedDevOrigins: ['172.28.96.1'],
+  allowedDevOrigins: [' https://sec-overnight-parking-kai.trycloudflare.com'],
 };
 
 export default nextConfig;

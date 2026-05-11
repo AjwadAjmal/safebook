@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert";
-import { validateCredentials } from "./auth-utils";
+import { validateCredentials, createUser } from "./auth-utils";
 import bcrypt from "bcrypt";
 
 test("validateCredentials should return user if credentials are correct", async () => {
@@ -47,4 +47,21 @@ test("validateCredentials should return null if user not found", async () => {
 
   const user = await validateCredentials("nonexistent", "password", findUserByUsername);
   assert.strictEqual(user, null);
+});
+
+test("createUser should hash password and insert user", async () => {
+  let insertedUser: { username: string; passwordHash: string } | null = null;
+  const mockInsert = async (u: { username: string; passwordHash: string }) => {
+    insertedUser = u;
+    return { id: "1", ...u, role: "member" as const, householdId: null };
+  };
+
+  await createUser("newuser", "plainpassword", mockInsert);
+
+  assert.ok(insertedUser);
+  assert.strictEqual(insertedUser.username, "newuser");
+  assert.notStrictEqual(insertedUser.passwordHash, "plainpassword");
+  
+  const isMatch = await bcrypt.compare("plainpassword", insertedUser.passwordHash);
+  assert.ok(isMatch);
 });

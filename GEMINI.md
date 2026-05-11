@@ -33,10 +33,17 @@ Du musst dein Langzeitgedächtnis aktiv pflegen. Das Verzeichnis `docs/memory-ba
 
 Halte dich strikt an die Vorgaben aus `techContext.md` und `systemPatterns.md`:
 
-* **Styling & UI:** * Design-Prinzip: **Mobile-First**.
-  * UX-Prinzip: "Viel Klicken, wenig Tippen".
+* **Styling & UI (Vanilla CSS - basierend auf `designConcept.md`):** * **Design-Philosophie:** "Ruhige Klarheit" – Refined Minimalism ohne visuelles Rauschen. Das Interface tritt hinter den Zahlen zurück.
+  * **UX & Layout-Prinzip:** **Mobile-First** (Page-Wrapper mit `max-width: 430px`, Bottom-Sheets statt zentrierter Modals). Grundsatz: "Viel Klicken, wenig Tippen".
+  * **Design-Konsistenz (Strict Rules):** Definiere alle Vorgaben (Farben für den Light Mode, Typografie-Skala, 4px-Spacing-Grid) strikt als CSS-Variablen im `:root`-Selektor der `globals.css`. 
+  * **Keine Hardcodierung:** Es dürfen **niemals** Hex-Werte direkt in CSS-Modulen geschrieben werden. Nutze immer die globalen `--color-*` und `--space-*` Variablen.
+  * **Komponenten-Styling:** Nutze ausschließlich **CSS Modules** (`[name].module.css`). Verwende konsistente Klassennamen (z.B. in Anlehnung an BEM). Verzichte auf Box-Shadows für ein flacheres UI und nutze stattdessen Borders (einzige Ausnahmen für Schatten: der Floating Action Button und Bottom-Sheets).
+  * **Typografie & Zahlen:** Verwende den nativen System-Font-Stack. **Zwingende Pflicht-Regel:** Alle Geldbeträge müssen mit `font-variant-numeric: tabular-nums` dargestellt werden!
+  * **Interaktion & A11y:** Stelle sicher, dass Tap-Targets mindestens `min-height: 44px` aufweisen. Nutze ausschließlich die dezenten Transitions aus dem Design-Konzept (z.B. `transform: scale(0.97)` als Pressed-State auf Mobile) und entferne niemals Fokus-Ringe ohne zugänglichen Ersatz.
+
 * **Datenbank (PostgreSQL mit Drizzle ORM):** * Nutze `snake_case` für alle Tabellen- und Spaltennamen.
   * **Hybrid-Logik beachten:** Next.js übernimmt einfache "Writes" (Schreibvorgänge), während `n8n` für komplexe Kalkulationen zuständig ist.
+  
 * **Sicherheit:** Passwörter NIEMALS im Klartext speichern. Nutze immer `bcrypt` für das Hashing im Authentifizierungs-Flow.
 * **Sprache:** Code und Variablen werden auf **Englisch** verfasst, Dokumentationen (Markdown) und UI-Texte auf **Deutsch**.
 * **Code-Updates:** Führe Änderungen durch kleinere, gezielte Ersetzungen durch, statt ganze Dateien neu zu generieren.

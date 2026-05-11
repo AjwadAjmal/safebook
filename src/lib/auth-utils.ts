@@ -16,6 +16,18 @@ export async function findUserByUsername(username: string): Promise<User | null>
   return (user as User) || null;
 }
 
+export async function createUser(
+  username: string,
+  password: string,
+  _insertUser = async (u: { username: string; passwordHash: string }) => {
+    const [user] = await db.insert(users).values(u).returning();
+    return user as User;
+  }
+) {
+  const passwordHash = await bcrypt.hash(password, 10);
+  return await _insertUser({ username, passwordHash });
+}
+
 export async function validateCredentials(
   username: string,
   password: string,

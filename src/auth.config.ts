@@ -34,6 +34,7 @@ export const authConfig = {
   },
   session: {
     strategy: "jwt",
+    maxAge: 1 * 60 * 60, // 1 Stunden in Sekunden für erhöhte Sicherheit (Finanz-App)
   },
   pages: {
     signIn: "/login",
