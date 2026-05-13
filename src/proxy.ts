@@ -1,9 +1,14 @@
-import NextAuth from "next-auth";
+import NextAuth, { Session } from "next-auth";
 import { authConfig } from "./auth.config";
+import { NextRequest } from "next/server";
 
 const { auth } = NextAuth(authConfig);
 
-export default auth((req) => {
+interface AuthRequest extends NextRequest {
+  auth: Session | null;
+}
+
+export const proxyLogic = (req: AuthRequest) => {
   const isLoggedin = !!req.auth;
   const { nextUrl } = req;
 
@@ -22,7 +27,14 @@ export default auth((req) => {
   if (!isLoggedin && !isPublicRoute) {
     return Response.redirect(new URL("/login", nextUrl));
   }
-});
+
+  // Redirect to onboarding if user has no householdId
+  if (isLoggedin && req.auth?.user && !req.auth.user.householdId && nextUrl.pathname !== "/onboarding") {
+    return Response.redirect(new URL("/onboarding", nextUrl));
+  }
+};
+
+export default auth(proxyLogic);
 
 export const config = {
   matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],

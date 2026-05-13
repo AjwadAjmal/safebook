@@ -1,5 +1,5 @@
 # Issue 4: Haushalt beitreten via Einladungscode
-**Status:** Offen  
+**Status:** Geschlossen ✅  
 **Typ:** AFK
 
 ## Übergeordneter Kontext
@@ -9,11 +9,11 @@ Referenz auf die `.activeContext.md`. Ermöglicht kollaborative Haushaltsführun
 Erweiterung der Onboarding-Seite um die Funktion "Einem Haushalt beitreten". Nutzer können einen 10-stelligen Einladungscode eingeben. Die Server Action validiert den Code und verknüpft den Nutzer mit dem entsprechenden Haushalt (Standardrolle: `member`).
 
 ## Akzeptanzkriterien
-- [ ] Eingabefeld für Einladungscode auf der Onboarding-Seite.
-- [ ] Server Action sucht Haushalt anhand des `invite_code`.
-- [ ] Validierung: Nutzer wird bei gültigem Code dem Haushalt zugeordnet.
-- [ ] Fehlerbehandlung bei ungültigen oder abgelaufenen Codes.
-- [ ] Weiterleitung zum Dashboard nach erfolgreichem Beitritt.
+- [x] Eingabefeld für Einladungscode auf der Onboarding-Seite.
+- [x] Server Action sucht Haushalt anhand des `invite_code`.
+- [x] Validierung: Nutzer wird bei gültigem Code dem Haushalt zugeordnet.
+- [x] Fehlerbehandlung bei ungültigen oder abgelaufenen Codes.
+- [x] Weiterleitung zum Dashboard nach erfolgreichem Beitritt.
 
 ## Blockiert durch
 - Issue 3
