@@ -3,6 +3,7 @@
 import { auth } from "@/auth";
 import { createHouseholdSchema, joinHouseholdSchema } from "../validations/household";
 import { createHousehold, updateUserHousehold, findHouseholdByInviteCode } from "../household-utils";
+import { linkAccountsToHousehold } from "../account-utils";
 import { redirect } from "next/navigation";
 
 async function getCurrentUser() {
@@ -12,9 +13,11 @@ async function getCurrentUser() {
 
 export async function createHouseholdAction(
   formData: FormData,
-  _deps = { createHousehold, updateUserHousehold, getCurrentUser }
+  _deps = { createHousehold, updateUserHousehold, getCurrentUser, linkAccountsToHousehold }
 ) {
   const name = formData.get("name") as string;
+  const accountIds = formData.getAll("accountIds") as string[];
+
   const result = createHouseholdSchema.safeParse({ name });
 
   if (!result.success) {
@@ -29,6 +32,7 @@ export async function createHouseholdAction(
   try {
     const household = await _deps.createHousehold(name);
     await _deps.updateUserHousehold(user.id, household.id, "admin");
+    await _deps.linkAccountsToHousehold(accountIds, household.id);
   } catch (error) {
     console.error("Failed to create household:", error);
     return { error: "Fehler beim Erstellen des Haushalts." };
@@ -39,9 +43,11 @@ export async function createHouseholdAction(
 
 export async function joinHouseholdAction(
   formData: FormData,
-  _deps = { findHouseholdByInviteCode, updateUserHousehold, getCurrentUser }
+  _deps = { findHouseholdByInviteCode, updateUserHousehold, getCurrentUser, linkAccountsToHousehold }
 ) {
   const inviteCode = formData.get("inviteCode") as string;
+  const accountIds = formData.getAll("accountIds") as string[];
+
   const result = joinHouseholdSchema.safeParse({ inviteCode });
 
   if (!result.success) {
@@ -60,6 +66,7 @@ export async function joinHouseholdAction(
 
   try {
     await _deps.updateUserHousehold(user.id, household.id, "member");
+    await _deps.linkAccountsToHousehold(accountIds, household.id);
   } catch (error) {
     console.error("Failed to join household:", error);
     return { error: "Fehler beim Beitreten des Haushalts." };

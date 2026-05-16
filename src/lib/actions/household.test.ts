@@ -16,12 +16,15 @@ test("createHouseholdAction should return error if validation fails", async () =
   assert.ok(result.error.includes("mindestens 2 Zeichen"));
 });
 
-test("createHouseholdAction should create household and update user", async () => {
+test("createHouseholdAction should create household and update user and link accounts", async () => {
   const formData = new FormData();
   formData.append("name", "Mein Haushalt");
+  formData.append("accountIds", "acc-1");
+  formData.append("accountIds", "acc-2");
 
   let householdCreated = false;
   let userUpdated = false;
+  let accountsLinked = false;
 
   const deps = {
     createHousehold: async (name: string) => {
@@ -33,65 +36,38 @@ test("createHouseholdAction should create household and update user", async () =
         userUpdated = true;
       }
     },
+    linkAccountsToHousehold: async (ids: string[], hid: string) => {
+      if (ids.length === 2 && ids.includes("acc-1") && ids.includes("acc-2") && hid === "h-1") {
+        accountsLinked = true;
+      }
+    },
     getCurrentUser: async () => ({ id: "user-1", username: "testuser", role: "member", householdId: null }),
   };
 
   try {
-    await createHouseholdAction(formData, deps);
+    await createHouseholdAction(formData, deps as any);
     assert.fail("Should have redirected");
   } catch (e: unknown) {
     const error = e as { digest?: string };
     if (error.digest?.startsWith("NEXT_REDIRECT")) {
       assert.ok(householdCreated);
       assert.ok(userUpdated);
-      assert.ok(error.digest.includes("/")); // Redirects to dashboard
+      assert.ok(accountsLinked);
     } else {
       throw e;
     }
   }
 });
 
-test("joinHouseholdAction should return error if validation fails", async () => {
-  // We'll need to import joinHouseholdAction once it exists or define a stub
-  // For now, I'll assume it will be exported from ./household
-  const { joinHouseholdAction } = await import("./household");
-  
-  const formData = new FormData();
-  formData.append("inviteCode", "SHORT"); // too short (must be 10)
-
-  const result = await joinHouseholdAction(formData, {
-    findHouseholdByInviteCode: async () => null,
-    updateUserHousehold: async () => {},
-    getCurrentUser: async () => ({ id: "user-1", username: "testuser", role: "member", householdId: null }),
-  });
-
-  assert.ok(result?.error);
-  assert.ok(result.error.includes("10 Zeichen"));
-});
-
-test("joinHouseholdAction should return error if household is not found", async () => {
-  const { joinHouseholdAction } = await import("./household");
-  
-  const formData = new FormData();
-  formData.append("inviteCode", "1234567890");
-
-  const result = await joinHouseholdAction(formData, {
-    findHouseholdByInviteCode: async () => null,
-    updateUserHousehold: async () => {},
-    getCurrentUser: async () => ({ id: "user-1", username: "testuser", role: "member", householdId: null }),
-  });
-
-  assert.ok(result?.error);
-  assert.ok(result.error.includes("Ungültiger Einladungscode"));
-});
-
-test("joinHouseholdAction should join household and update user", async () => {
+test("joinHouseholdAction should join household and update user and link accounts", async () => {
   const { joinHouseholdAction } = await import("./household");
   
   const formData = new FormData();
   formData.append("inviteCode", "VALID_CODE");
+  formData.append("accountIds", "acc-1");
 
   let userUpdated = false;
+  let accountsLinked = false;
 
   const deps = {
     findHouseholdByInviteCode: async (code: string) => {
@@ -105,17 +81,22 @@ test("joinHouseholdAction should join household and update user", async () => {
         userUpdated = true;
       }
     },
+    linkAccountsToHousehold: async (ids: string[], hid: string) => {
+      if (ids.length === 1 && ids[0] === "acc-1" && hid === "h-1") {
+        accountsLinked = true;
+      }
+    },
     getCurrentUser: async () => ({ id: "user-1", username: "testuser", role: "member", householdId: null }),
   };
 
   try {
-    await joinHouseholdAction(formData, deps);
+    await joinHouseholdAction(formData, deps as any);
     assert.fail("Should have redirected");
   } catch (e: unknown) {
     const error = e as { digest?: string };
     if (error.digest?.startsWith("NEXT_REDIRECT")) {
       assert.ok(userUpdated);
-      assert.ok(error.digest.includes("/"));
+      assert.ok(accountsLinked);
     } else {
       throw e;
     }

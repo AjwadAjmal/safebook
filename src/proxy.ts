@@ -8,7 +8,9 @@ interface AuthRequest extends NextRequest {
   auth: Session | null;
 }
 
-export const proxyLogic = (req: AuthRequest) => {
+import { checkUserHasAccounts } from "./lib/account-utils";
+
+export const proxyLogic = async (req: AuthRequest, hasAccounts?: (userId: string) => Promise<boolean>) => {
   const isLoggedin = !!req.auth;
   const { nextUrl } = req;
 
@@ -28,13 +30,31 @@ export const proxyLogic = (req: AuthRequest) => {
     return Response.redirect(new URL("/login", nextUrl));
   }
 
-  // Redirect to onboarding if user has no householdId
-  if (isLoggedin && req.auth?.user && !req.auth.user.householdId && nextUrl.pathname !== "/onboarding") {
-    return Response.redirect(new URL("/onboarding", nextUrl));
+  // Multi-step onboarding logic
+  if (isLoggedin && req.auth?.user) {
+    const userId = req.auth.user.id;
+    // Verwende die übergebene Funktion oder die Standard-Funktion
+    const checkFn = hasAccounts || checkUserHasAccounts;
+    const hasAccs = await checkFn(userId);
+    const hasHousehold = !!req.auth.user.householdId;
+
+    if (!hasAccs) {
+      if (nextUrl.pathname !== "/onboarding/accounts") {
+        return Response.redirect(new URL("/onboarding/accounts", nextUrl));
+      }
+      return;
+    }
+
+    if (!hasHousehold) {
+      if (nextUrl.pathname !== "/onboarding/household") {
+        return Response.redirect(new URL("/onboarding/household", nextUrl));
+      }
+      return;
+    }
   }
 };
 
-export default auth(proxyLogic);
+export default auth((req) => proxyLogic(req));
 
 export const config = {
   matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],

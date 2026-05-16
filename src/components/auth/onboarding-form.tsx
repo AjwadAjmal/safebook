@@ -4,7 +4,17 @@ import { useState } from "react";
 import { createHouseholdAction, joinHouseholdAction } from "@/lib/actions/household";
 import styles from "./auth.module.css";
 
-export function OnboardingForm() {
+interface Account {
+  id: string;
+  name: string;
+  type: string;
+}
+
+interface OnboardingFormProps {
+  unlinkedAccounts?: Account[];
+}
+
+export function OnboardingForm({ unlinkedAccounts = [] }: OnboardingFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [mode, setMode] = useState<"create" | "join">("create");
@@ -36,6 +46,33 @@ export function OnboardingForm() {
       setIsLoading(false);
     }
   }
+
+  const renderAccountChecklist = () => {
+    if (unlinkedAccounts.length === 0) return null;
+
+    return (
+      <div className={styles.field}>
+        <label>Konten zum Importieren auswählen</label>
+        <div className={styles.accountChecklist}>
+          {unlinkedAccounts.map((account) => (
+            <label key={account.id} className={styles.accountItem}>
+              <input
+                type="checkbox"
+                name="accountIds"
+                value={account.id}
+                className={styles.checkbox}
+                defaultChecked
+              />
+              <div className={styles.accountInfo}>
+                <span className={styles.accountName}>{account.name}</span>
+                <span className={styles.accountType}>{account.type}</span>
+              </div>
+            </label>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className={styles.container}>
@@ -76,6 +113,9 @@ export function OnboardingForm() {
               autoFocus
             />
           </div>
+          
+          {renderAccountChecklist()}
+
           {error && <div className={styles.error}>{error}</div>}
           <button type="submit" className={styles.button} disabled={isLoading}>
             {isLoading ? "Wird erstellt..." : "Haushalt erstellen"}
@@ -96,6 +136,9 @@ export function OnboardingForm() {
               style={{ textTransform: "uppercase" }}
             />
           </div>
+
+          {renderAccountChecklist()}
+
           {error && <div className={styles.error}>{error}</div>}
           <button type="submit" className={styles.button} disabled={isLoading}>
             {isLoading ? "Wird beigetreten..." : "Haushalt beitreten"}

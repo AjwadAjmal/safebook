@@ -3,7 +3,11 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
-  allowedDevOrigins: [' https://sec-overnight-parking-kai.trycloudflare.com'],
+  allowedDevOrigins: ['localhost:3000'],
 };
+
+module.exports = {
+  allowedDevOrigins: ['herb-convertible-passive-weblog.trycloudflare.com'],
+}
 
 export default nextConfig;
