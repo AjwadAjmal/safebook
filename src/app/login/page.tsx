@@ -3,8 +3,10 @@ import styles from "../page.module.css";
 
 export default function LoginPage() {
   return (
-    <main className={styles.page}>
-      <LoginForm />
-    </main>
+    <div className={styles.page}>
+      <main className={styles.main}>
+        <LoginForm />
+      </main>
+    </div>
   );
 }
