@@ -1,5 +1,5 @@
 # Issue 10: Modal-Wizard & Account-Erstellung
-**Status:** Offen  
+**Status:** Erledigt  
 **Typ:** AFK
 
 ## Übergeordneter Kontext
@@ -12,10 +12,10 @@ Implementierung des Zwei-Schritt-Workflows im Modal:
 Inklusive Validierung der Felder innerhalb des Modals, bevor ein Konto zum lokalen State hinzugefügt wird.
 
 ## Akzeptanzkriterien
-- [ ] Das Modal zeigt einen initialen Bestätigungs-Dialog.
-- [ ] Nach Bestätigung erscheint das Eingabeformular.
-- [ ] Das Formular validiert Pflichtfelder (Name, Institut, Saldo).
-- [ ] Beim Klick auf "Speichern" im Modal wird das Konto zum `accounts` State der Hauptkomponente hinzugefügt und das Modal schließt sich.
+- [x] Das Modal zeigt einen initialen Bestätigungs-Dialog.
+- [x] Nach Bestätigung erscheint das Eingabeformular.
+- [x] Das Formular validiert Pflichtfelder (Name, Institut, Saldo).
+- [x] Beim Klick auf "Speichern" im Modal wird das Konto zum `accounts` State der Hauptkomponente hinzugefügt und das Modal schließt sich.
 
 ## Blockiert durch
 - Issue 9

@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
 };
 
 module.exports = {
-  allowedDevOrigins: ['herb-convertible-passive-weblog.trycloudflare.com'],
+  allowedDevOrigins: ['yamaha-rod-holes-upon.trycloudflare.com'],
 }
 
 export default nextConfig;

@@ -2,32 +2,92 @@
 
 import { useState } from "react";
 import { createProfileAccounts } from "@/lib/actions/account";
+import { validateAccount, ValidationErrors } from "@/lib/onboarding-logic";
+import { 
+  ModalState, 
+  createInitialModalState, 
+  addAnotherAccount, 
+  switchAccount, 
+  updateAccountData 
+} from "@/lib/modal-logic";
+import { Account, AccountType } from "@/types/onboarding";
+import { AccountCard } from "./account-card";
 import styles from "./auth.module.css";
 
-type AccountType = "giro" | "depot" | "cash";
-
-interface AccountSelection {
-  type: AccountType;
-  count: number;
-}
+type WizardStep = "confirmation" | "form";
 
 export function AccountOnboardingForm() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [selections, setSelections] = useState<AccountSelection[]>([
-    { type: "giro", count: 0 },
-    { type: "depot", count: 0 },
-    { type: "cash", count: 0 },
-  ]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [activeModalType, setActiveModalType] = useState<AccountType | null>(null);
+  const [wizardStep, setWizardStep] = useState<WizardStep>("confirmation");
+  
+  const [modalState, setModalState] = useState<ModalState | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<ValidationErrors[]>([]);
 
-  const updateCount = (type: AccountType, delta: number) => {
-    setSelections(prev => prev.map(s => 
-      s.type === type ? { ...s, count: Math.max(0, s.count + delta) } : s
-    ));
+  const getCountByType = (type: AccountType) => accounts.filter(a => a.type === type).length;
+  const totalAccounts = accounts.length;
+
+  const handleTileClick = (type: AccountType) => {
+    setActiveModalType(type);
+    setWizardStep("confirmation");
+    setModalState(createInitialModalState(type));
+    setFieldErrors([]);
     setError(null);
   };
 
-  const totalAccounts = selections.reduce((sum, s) => sum + s.count, 0);
+  const handleCloseModal = () => {
+    setActiveModalType(null);
+    setWizardStep("confirmation");
+    setModalState(null);
+    setFieldErrors([]);
+  };
+
+  const handleConfirmAdd = () => {
+    setWizardStep("form");
+  };
+
+  const handleAddAnother = () => {
+    if (!modalState || !activeModalType) return;
+    setModalState(addAnotherAccount(modalState, activeModalType));
+  };
+
+  const handleSwitchAccount = (index: number) => {
+    if (!modalState) return;
+    setModalState(switchAccount(modalState, index));
+  };
+
+  const handleSaveAccount = () => {
+    if (!modalState) return;
+
+    const allErrors = modalState.accounts.map(acc => validateAccount(acc));
+    setFieldErrors(allErrors);
+
+    const hasErrors = allErrors.some(err => Object.keys(err).length > 0);
+    if (hasErrors) {
+      // Focus the first account with errors
+      const firstErrorIndex = allErrors.findIndex(err => Object.keys(err).length > 0);
+      setModalState(switchAccount(modalState, firstErrorIndex));
+      return;
+    }
+
+    setAccounts([...accounts, ...modalState.accounts]);
+    handleCloseModal();
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const { name, value } = e.target;
+    if (!modalState) return;
+    
+    setModalState(updateAccountData(modalState, index, { [name]: value }));
+    
+    if (fieldErrors[index]?.[name as keyof ValidationErrors]) {
+      const newErrors = [...fieldErrors];
+      newErrors[index] = { ...newErrors[index], [name]: undefined };
+      setFieldErrors(newErrors);
+    }
+  };
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -39,37 +99,27 @@ export function AccountOnboardingForm() {
     }
 
     setIsLoading(true);
-    const formData = new FormData(event.currentTarget);
-    const accountsList: {
-      type: AccountType;
-      name: string;
-      institution: string;
-      currentValue: string;
-      investedCapital?: string;
-      initialDate: string;
-    }[] = [];
-
-    selections.forEach(sel => {
-      for (let i = 0; i < sel.count; i++) {
-        const prefix = `${sel.type}_${i}_`;
-        accountsList.push({
-          type: sel.type,
-          name: formData.get(`${prefix}name`) as string,
-          institution: formData.get(`${prefix}institution`) as string,
-          currentValue: formData.get(`${prefix}currentValue`) as string,
-          investedCapital: sel.type === "depot" ? formData.get(`${prefix}investedCapital`) as string : undefined,
-          initialDate: formData.get(`${prefix}initialDate`) as string,
-        });
-      }
-    });
-
-    const result = await createProfileAccounts(accountsList);
+    
+    const result = await createProfileAccounts(accounts.map((acc) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { id, ...data } = acc;
+      return data;
+    }));
 
     if (result?.error) {
       setError(result.error);
       setIsLoading(false);
     }
   }
+
+  const getAccountTypeLabel = (type: AccountType) => {
+    switch (type) {
+      case "giro": return "Girokonto";
+      case "depot": return "Aktiendepot";
+      case "cash": return "Kasse";
+      default: return "";
+    }
+  };
 
   return (
     <div className={styles.container}>
@@ -81,119 +131,170 @@ export function AccountOnboardingForm() {
       </div>
 
       <div className={styles.tileGrid}>
-        {selections.map(sel => (
-          <div 
-            key={sel.type} 
-            className={`${styles.tile} ${sel.count > 0 ? styles.tileActive : ""}`}
-          >
-            <div className={styles.tileIcon}>
-              {sel.type === "giro" && "💳"}
-              {sel.type === "depot" && "📈"}
-              {sel.type === "cash" && "💵"}
+        {(["giro", "depot", "cash"] as AccountType[]).map(type => {
+          const count = getCountByType(type);
+          return (
+            <div 
+              key={type} 
+              className={`${styles.tile} ${count > 0 ? styles.tileActive : ""}`}
+              onClick={() => handleTileClick(type)}
+            >
+              <div className={styles.tileIcon}>
+                {type === "giro" && "💳"}
+                {type === "depot" && "📈"}
+                {type === "cash" && "💵"}
+              </div>
+              <div className={styles.tileLabel}>
+                {getAccountTypeLabel(type)}
+              </div>
+              {count > 0 && (
+                <div className={styles.tileCountBadge}>{count}</div>
+              )}
             </div>
-            <div className={styles.tileLabel}>
-              {sel.type === "giro" && "Girokonto"}
-              {sel.type === "depot" && "Aktiendepot"}
-              {sel.type === "cash" && "Kasse"}
-            </div>
-            <div className={styles.tileControls}>
-              <button 
-                type="button" 
-                className={styles.tileButton}
-                onClick={() => updateCount(sel.type, -1)}
-                disabled={sel.count === 0}
-              >
-                -
-              </button>
-              <span className={styles.tileCount}>{sel.count}</span>
-              <button 
-                type="button" 
-                className={styles.tileButton}
-                onClick={() => updateCount(sel.type, 1)}
-              >
-                +
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      <form onSubmit={handleSubmit} className={styles.form}>
-        {selections.map(sel => (
-          Array.from({ length: sel.count }).map((_, i) => (
-            <div key={`${sel.type}_${i}`} className={styles.formSection}>
-              <div className={styles.sectionHeader}>
-                <span>
-                  {sel.type === "giro" && "Girokonto"}
-                  {sel.type === "depot" && "Aktiendepot"}
-                  {sel.type === "cash" && "Kasse"}
-                  {` #${i + 1}`}
-                </span>
-                <span className={styles.sectionBadge}>Neu</span>
-              </div>
-              
-              <div className={styles.field}>
-                <label htmlFor={`${sel.type}_${i}_name`}>Kontoname</label>
-                <input
-                  id={`${sel.type}_${i}_name`}
-                  name={`${sel.type}_${i}_name`}
-                  type="text"
-                  placeholder="z.B. Hauptkonto"
-                  required
-                />
-              </div>
+      {accounts.length > 0 && (
+        <div className={styles.accountList}>
+          {accounts.map((acc) => (
+            <AccountCard key={acc.id} account={acc} />
+          ))}
+        </div>
+      )}
 
-              <div className={styles.field}>
-                <label htmlFor={`${sel.type}_${i}_institution`}>Institut / Bank</label>
-                <input
-                  id={`${sel.type}_${i}_institution`}
-                  name={`${sel.type}_${i}_institution`}
-                  type="text"
-                  placeholder="z.B. Sparkasse"
-                  required
-                />
-              </div>
-
-              <div className={styles.field}>
-                <label htmlFor={`${sel.type}_${i}_currentValue`}>Aktueller Saldo / Wert</label>
-                <input
-                  id={`${sel.type}_${i}_currentValue`}
-                  name={`${sel.type}_${i}_currentValue`}
-                  type="number"
-                  step="0.01"
-                  placeholder="0,00"
-                  required
-                />
-              </div>
-
-              {sel.type === "depot" && (
-                <div className={styles.field}>
-                  <label htmlFor={`${sel.type}_${i}_investedCapital`}>Investiertes Kapital</label>
-                  <input
-                    id={`${sel.type}_${i}_investedCapital`}
-                    name={`${sel.type}_${i}_investedCapital`}
-                    type="number"
-                    step="0.01"
-                    placeholder="0,00"
-                    required
-                  />
+      {activeModalType && (
+        <div className={styles.modalOverlay} onClick={handleCloseModal}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle}>
+                {getAccountTypeLabel(activeModalType)}
+              </h2>
+              <button 
+                type="button" 
+                className={styles.closeButton}
+                onClick={handleCloseModal}
+              >
+                ×
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              {wizardStep === "confirmation" ? (
+                <div className={styles.confirmationContent}>
+                  <p>Möchtest du ein neues {getAccountTypeLabel(activeModalType).toLowerCase()} anlegen?</p>
+                </div>
+              ) : (
+                <div className={styles.accordion}>
+                  {modalState?.accounts.map((acc, index) => {
+                    const isOpen = modalState.editingIndex === index;
+                    const errors = fieldErrors[index] || {};
+                    return (
+                      <div key={acc.id} className={`${styles.accordionItem} ${isOpen ? styles.accordionItemOpen : ""}`}>
+                        <div 
+                          className={styles.accordionHeader}
+                          onClick={() => handleSwitchAccount(index)}
+                        >
+                          <span className={styles.accordionTitle}>
+                            {acc.name || `Neues ${getAccountTypeLabel(activeModalType)}`}
+                          </span>
+                          <span className={styles.accordionIcon}>{isOpen ? "−" : "＋"}</span>
+                        </div>
+                        {isOpen && (
+                          <div className={styles.accordionContent}>
+                            <div className={styles.field}>
+                              <label htmlFor={`name-${index}`}>Bezeichnung</label>
+                              <input
+                                type="text"
+                                id={`name-${index}`}
+                                name="name"
+                                value={acc.name}
+                                onChange={(e) => handleInputChange(e, index)}
+                                placeholder="z.B. Hauptkonto"
+                                autoFocus
+                              />
+                              {errors.name && <span className={styles.error}>{errors.name}</span>}
+                            </div>
+                            <div className={styles.field}>
+                              <label htmlFor={`institution-${index}`}>Bank / Institut</label>
+                              <input
+                                type="text"
+                                id={`institution-${index}`}
+                                name="institution"
+                                value={acc.institution}
+                                onChange={(e) => handleInputChange(e, index)}
+                                placeholder="z.B. Sparkasse"
+                              />
+                              {errors.institution && <span className={styles.error}>{errors.institution}</span>}
+                            </div>
+                            <div className={styles.field}>
+                              <label htmlFor={`currentValue-${index}`}>Aktueller Saldo (€)</label>
+                              <input
+                                type="text"
+                                id={`currentValue-${index}`}
+                                name="currentValue"
+                                value={acc.currentValue}
+                                onChange={(e) => handleInputChange(e, index)}
+                                placeholder="0,00"
+                                inputMode="decimal"
+                              />
+                              {errors.currentValue && <span className={styles.error}>{errors.currentValue}</span>}
+                            </div>
+                            <div className={styles.field}>
+                              <label htmlFor={`initialDate-${index}`}>Datum des Saldos</label>
+                              <input
+                                type="date"
+                                id={`initialDate-${index}`}
+                                name="initialDate"
+                                value={acc.initialDate}
+                                onChange={(e) => handleInputChange(e, index)}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                  <button 
+                    type="button" 
+                    className={styles.addAnotherButton}
+                    onClick={handleAddAnother}
+                  >
+                    + Weiteres Konto hinzufügen
+                  </button>
                 </div>
               )}
-
-              <div className={styles.field}>
-                <label htmlFor={`${sel.type}_${i}_initialDate`}>Datum des Saldos</label>
-                <input
-                  id={`${sel.type}_${i}_initialDate`}
-                  name={`${sel.type}_${i}_initialDate`}
-                  type="date"
-                  defaultValue={new Date().toISOString().split("T")[0]}
-                  required
-                />
-              </div>
             </div>
-          ))
-        ))}
+            <div className={styles.modalFooter}>
+              <button 
+                type="button" 
+                className={styles.buttonSecondary}
+                onClick={handleCloseModal}
+              >
+                Abbrechen
+              </button>
+              {wizardStep === "confirmation" ? (
+                <button 
+                  type="button" 
+                  className={styles.button}
+                  onClick={handleConfirmAdd}
+                >
+                  Ja, erstellen
+                </button>
+              ) : (
+                <button 
+                  type="button" 
+                  className={styles.button}
+                  onClick={handleSaveAccount}
+                >
+                  Speichern
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
+      <form onSubmit={handleSubmit} className={styles.form}>
         {error && <div className={styles.error}>{error}</div>}
         
         <button 
@@ -207,3 +308,4 @@ export function AccountOnboardingForm() {
     </div>
   );
 }
+

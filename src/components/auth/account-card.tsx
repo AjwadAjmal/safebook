@@ -1,0 +1,66 @@
+"use client";
+
+import { useState } from "react";
+import { Account, AccountType } from "@/types/onboarding";
+import styles from "./auth.module.css";
+
+interface AccountCardProps {
+  account: Account;
+}
+
+export function AccountCard({ account }: AccountCardProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const getAccountTypeLabel = (type: AccountType) => {
+    switch (type) {
+      case "giro": return "Girokonto";
+      case "depot": return "Aktiendepot";
+      case "cash": return "Kasse";
+      default: return "";
+    }
+  };
+
+  const getAccountTypeIcon = (type: AccountType) => {
+    switch (type) {
+      case "giro": return "💳";
+      case "depot": return "📈";
+      case "cash": return "💵";
+      default: return "";
+    }
+  };
+
+  return (
+    <div className={`${styles.accountCard} ${isOpen ? styles.accountCardOpen : ""}`}>
+      <div className={styles.accountCardHeader} onClick={() => setIsOpen(!isOpen)}>
+        <div className={styles.accountCardIcon}>
+          {getAccountTypeIcon(account.type)}
+        </div>
+        <div className={styles.accountCardInfo}>
+          <span className={styles.accountCardName}>{account.name}</span>
+          <span className={styles.accountCardType}>{getAccountTypeLabel(account.type)}</span>
+        </div>
+        <div className={styles.accountCardToggle}>
+          {isOpen ? "−" : "＋"}
+        </div>
+      </div>
+      {isOpen && (
+        <div className={styles.accountCardDetails}>
+          <div className={styles.accountCardDetailRow}>
+            <span className={styles.accountCardDetailLabel}>Institut</span>
+            <span className={styles.accountCardDetailValue}>{account.institution}</span>
+          </div>
+          <div className={styles.accountCardDetailRow}>
+            <span className={styles.accountCardDetailLabel}>Saldo</span>
+            <span className={`${styles.accountCardDetailValue} tabular-nums`}>
+              {account.currentValue} €
+            </span>
+          </div>
+          <div className={styles.accountCardDetailRow}>
+            <span className={styles.accountCardDetailLabel}>Datum</span>
+            <span className={styles.accountCardDetailValue}>{account.initialDate}</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

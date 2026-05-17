@@ -1,5 +1,5 @@
 # Issue 11: Multi-Account Management im Modal
-**Status:** Offen  
+**Status:** Abgeschlossen  
 **Typ:** AFK
 
 ## Übergeordneter Kontext
@@ -9,10 +9,10 @@ Referenz auf die `.activeContext.md`. Optimierung des Modals für Nutzer mit meh
 Erweiterung des Modals um die Funktion "Weiteres Konto hinzufügen". Implementierung einer Akkordeon-Logik: Wenn ein neues Konto hinzugefügt wird, klappt das vorherige Formular ein. Nur ein Formularabschnitt ist gleichzeitig zur Bearbeitung geöffnet.
 
 ## Akzeptanzkriterien
-- [ ] Option "Weiteres Konto hinzufügen" ist im Modal verfügbar.
-- [ ] Bestehende Formularabschnitte klappen bei Hinzufügen eines neuen Abschnitts ein.
-- [ ] Der Nutzer kann zwischen den Abschnitten wechseln (Akkordeon-Verhalten).
-- [ ] Alle Konten im Modal werden beim finalen Schließen des Modals in den Haupt-State übernommen.
+- [x] Option "Weiteres Konto hinzufügen" ist im Modal verfügbar.
+- [x] Bestehende Formularabschnitte klappen bei Hinzufügen eines neuen Abschnitts ein.
+- [x] Der Nutzer kann zwischen den Abschnitten wechseln (Akkordeon-Verhalten).
+- [x] Alle Konten im Modal werden beim finalen Schließen des Modals in den Haupt-State übernommen.
 
 ## Blockiert durch
 - Issue 10
