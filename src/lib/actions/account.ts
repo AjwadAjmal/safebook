@@ -47,8 +47,10 @@ export async function createProfileAccounts(
   const parsedAccounts = accountsList.map(acc => ({
     ...acc,
     initialDate: new Date(acc.initialDate),
-    currentValue: Number(acc.currentValue),
-    investedCapital: acc.investedCapital !== undefined ? Number(acc.investedCapital) : undefined,
+    currentValue: typeof acc.currentValue === "string" ? Number(acc.currentValue.replace(",", ".")) : Number(acc.currentValue),
+    investedCapital: acc.investedCapital !== undefined 
+      ? (typeof acc.investedCapital === "string" ? Number(acc.investedCapital.replace(",", ".")) : Number(acc.investedCapital))
+      : undefined,
   }));
 
   const result = accountsSchema.safeParse(parsedAccounts);

@@ -6,9 +6,10 @@ import styles from "./auth.module.css";
 
 interface AccountCardProps {
   account: Account;
+  onEdit?: (account: Account) => void;
 }
 
-export function AccountCard({ account }: AccountCardProps) {
+export function AccountCard({ account, onEdit }: AccountCardProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const getAccountTypeLabel = (type: AccountType) => {
@@ -31,16 +32,20 @@ export function AccountCard({ account }: AccountCardProps) {
 
   return (
     <div className={`${styles.accountCard} ${isOpen ? styles.accountCardOpen : ""}`}>
-      <div className={styles.accountCardHeader} onClick={() => setIsOpen(!isOpen)}>
-        <div className={styles.accountCardIcon}>
-          {getAccountTypeIcon(account.type)}
+      <div className={styles.accountCardHeader}>
+        <div className={styles.accountCardHeaderMain} onClick={() => setIsOpen(!isOpen)}>
+          <div className={styles.accountCardIcon}>
+            {getAccountTypeIcon(account.type)}
+          </div>
+          <div className={styles.accountCardInfo}>
+            <span className={styles.accountCardName}>{account.name}</span>
+            <span className={styles.accountCardType}>{getAccountTypeLabel(account.type)}</span>
+          </div>
         </div>
-        <div className={styles.accountCardInfo}>
-          <span className={styles.accountCardName}>{account.name}</span>
-          <span className={styles.accountCardType}>{getAccountTypeLabel(account.type)}</span>
-        </div>
-        <div className={styles.accountCardToggle}>
-          {isOpen ? "−" : "＋"}
+        <div className={styles.accountCardActions}>
+          <div className={styles.accountCardToggle} onClick={() => setIsOpen(!isOpen)}>
+            {isOpen ? "−" : "＋"}
+          </div>
         </div>
       </div>
       {isOpen && (
@@ -59,6 +64,15 @@ export function AccountCard({ account }: AccountCardProps) {
             <span className={styles.accountCardDetailLabel}>Datum</span>
             <span className={styles.accountCardDetailValue}>{account.initialDate}</span>
           </div>
+          {onEdit && (
+            <button 
+              type="button"
+              className={styles.accountCardEditButton}
+              onClick={() => onEdit(account)}
+            >
+              Bearbeiten
+            </button>
+          )}
         </div>
       )}
     </div>

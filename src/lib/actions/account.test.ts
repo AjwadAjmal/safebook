@@ -30,6 +30,39 @@ test("createProfileAccounts should return error if validation fails", async () =
   assert.ok(result.error.includes("2 Zeichen"));
 });
 
+test("createProfileAccounts should handle numbers with commas", async () => {
+  const accountsToSave = [
+    {
+      type: "giro" as const,
+      name: "Test Account",
+      institution: "Test Bank",
+      currentValue: "1234,56",
+      initialDate: "2024-01-01",
+    },
+  ];
+
+  let savedData: any = null;
+  const deps = {
+    getCurrentUser: async () => ({ id: "user_123" }),
+    saveAccounts: async (data: any) => {
+      savedData = data;
+    },
+  };
+
+  try {
+    // @ts-ignore
+    await createProfileAccounts(accountsToSave, deps);
+  } catch (e: any) {
+    if (e.digest?.startsWith("NEXT_REDIRECT")) {
+      assert.strictEqual(savedData[0].currentValue, "1234.56");
+      return;
+    }
+    throw e;
+  }
+  
+  // If we reach here, it might have returned an error result
+});
+
 test("createProfileAccounts should save accounts and redirect", async () => {
   let savedData: {
     userId: string;

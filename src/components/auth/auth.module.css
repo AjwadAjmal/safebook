@@ -173,6 +173,12 @@
   background: var(--color-accent-primary-light);
 }
 
+.tileDisabled {
+  border-color: var(--color-accent-primary);
+  background: var(--color-bg-surface);
+  cursor: default;
+}
+
 .tileIcon {
   font-size: 24px;
   margin-bottom: var(--space-1);
@@ -182,9 +188,11 @@
   font-size: var(--text-xs);
   font-weight: 600;
   color: var(--color-text-secondary);
+  transition: color var(--transition-fast);
 }
 
-.tileActive .tileLabel {
+.tileActive .tileLabel,
+.tileDisabled .tileLabel {
   color: var(--color-accent-primary);
 }
 
@@ -475,6 +483,24 @@
   background: var(--color-accent-primary-light);
 }
 
+.accordionDeleteButton {
+  align-self: flex-end;
+  background: none;
+  border: none;
+  color: var(--color-negative);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  cursor: pointer;
+  padding: var(--space-1) 0;
+  opacity: 0.7;
+  transition: opacity var(--transition-fast);
+}
+
+.accordionDeleteButton:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
 /* Account Card */
 .accountCard {
   background: var(--color-bg-surface);
@@ -494,8 +520,47 @@
   display: flex;
   align-items: center;
   padding: var(--space-4);
-  cursor: pointer;
   gap: var(--space-3);
+}
+
+.accountCardHeaderMain {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 1;
+  cursor: pointer;
+}
+
+.accountCardActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.accountCardActionEdit,
+.accountCardActionDelete {
+  background: none;
+  border: none;
+  font-size: 20px;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+}
+
+.accountCardActionEdit {
+  color: #888;
+}
+
+.accountCardActionDelete {
+  color: #ff4d4f;
+}
+
+.accountCardActionEdit:hover,
+.accountCardActionDelete:hover {
+  opacity: 0.7;
 }
 
 .accountCardIcon {
@@ -558,6 +623,28 @@
 .accountCardDetailValue {
   color: var(--color-text-primary);
   font-weight: 500;
+}
+
+.accountCardEditButton {
+  margin-top: var(--space-2);
+  width: 100%;
+  padding: var(--space-2);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.accountCardEditButton:hover {
+  background: var(--color-border);
 }
 
 .accountList {

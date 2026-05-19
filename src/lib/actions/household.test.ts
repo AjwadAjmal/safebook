@@ -45,6 +45,7 @@ test("createHouseholdAction should create household and update user and link acc
   };
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await createHouseholdAction(formData, deps as any);
     assert.fail("Should have redirected");
   } catch (e: unknown) {
@@ -90,6 +91,7 @@ test("joinHouseholdAction should join household and update user and link account
   };
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await joinHouseholdAction(formData, deps as any);
     assert.fail("Should have redirected");
   } catch (e: unknown) {

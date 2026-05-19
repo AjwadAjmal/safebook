@@ -8,7 +8,9 @@ import {
   createInitialModalState, 
   addAnotherAccount, 
   switchAccount, 
-  updateAccountData 
+  updateAccountData,
+  createEditModalState,
+  removeAccountFromModal
 } from "@/lib/modal-logic";
 import { Account, AccountType } from "@/types/onboarding";
 import { AccountCard } from "./account-card";
@@ -37,6 +39,27 @@ export function AccountOnboardingForm() {
     setError(null);
   };
 
+  const handleEditAccount = (account: Account) => {
+    setActiveModalType(account.type);
+    setWizardStep("form");
+    setModalState(createEditModalState(account.type, accounts, account.id));
+    setFieldErrors([]);
+    setError(null);
+  };
+
+  const handleRemoveFromModal = (index: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!modalState) return;
+    setModalState(removeAccountFromModal(modalState, index));
+    
+    // Clear field error for removed index
+    if (fieldErrors[index]) {
+      const newErrors = [...fieldErrors];
+      newErrors.splice(index, 1);
+      setFieldErrors(newErrors);
+    }
+  };
+
   const handleCloseModal = () => {
     setActiveModalType(null);
     setWizardStep("confirmation");
@@ -59,7 +82,7 @@ export function AccountOnboardingForm() {
   };
 
   const handleSaveAccount = () => {
-    if (!modalState) return;
+    if (!modalState || !activeModalType) return;
 
     const allErrors = modalState.accounts.map(acc => validateAccount(acc));
     setFieldErrors(allErrors);
@@ -72,7 +95,9 @@ export function AccountOnboardingForm() {
       return;
     }
 
-    setAccounts([...accounts, ...modalState.accounts]);
+    // Merge accounts: remove all of current type and add from modal
+    const otherAccounts = accounts.filter(a => a.type !== activeModalType);
+    setAccounts([...otherAccounts, ...modalState.accounts]);
     handleCloseModal();
   };
 
@@ -136,8 +161,8 @@ export function AccountOnboardingForm() {
           return (
             <div 
               key={type} 
-              className={`${styles.tile} ${count > 0 ? styles.tileActive : ""}`}
-              onClick={() => handleTileClick(type)}
+              className={`${styles.tile} ${count > 0 ? styles.tileDisabled : ""}`}
+              onClick={() => count === 0 && handleTileClick(type)}
             >
               <div className={styles.tileIcon}>
                 {type === "giro" && "💳"}
@@ -158,7 +183,11 @@ export function AccountOnboardingForm() {
       {accounts.length > 0 && (
         <div className={styles.accountList}>
           {accounts.map((acc) => (
-            <AccountCard key={acc.id} account={acc} />
+            <AccountCard 
+              key={acc.id} 
+              account={acc} 
+              onEdit={handleEditAccount}
+            />
           ))}
         </div>
       )}
@@ -209,8 +238,8 @@ export function AccountOnboardingForm() {
                                 name="name"
                                 value={acc.name}
                                 onChange={(e) => handleInputChange(e, index)}
-                                placeholder="z.B. Hauptkonto"
-                                autoFocus
+                                placeholder="Privates Girokonto"
+                                maxLength={20}
                               />
                               {errors.name && <span className={styles.error}>{errors.name}</span>}
                             </div>
@@ -222,7 +251,8 @@ export function AccountOnboardingForm() {
                                 name="institution"
                                 value={acc.institution}
                                 onChange={(e) => handleInputChange(e, index)}
-                                placeholder="z.B. Sparkasse"
+                                placeholder="Sparkasse"
+                                maxLength={20}
                               />
                               {errors.institution && <span className={styles.error}>{errors.institution}</span>}
                             </div>
@@ -249,6 +279,13 @@ export function AccountOnboardingForm() {
                                 onChange={(e) => handleInputChange(e, index)}
                               />
                             </div>
+                            <button
+                              type="button"
+                              className={styles.accordionDeleteButton}
+                              onClick={(e) => handleRemoveFromModal(index, e)}
+                            >
+                              Dieses Konto entfernen
+                            </button>
                           </div>
                         )}
                       </div>
