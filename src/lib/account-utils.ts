@@ -1,43 +1,40 @@
-import { db } from "@/db";
-import { accounts } from "@/db/schema";
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { Account, AccountType } from "@/types/onboarding";
 
-export async function checkUserHasAccounts(userId: string): Promise<boolean> {
-  const [account] = await db
-    .select({ id: accounts.id })
-    .from(accounts)
-    .where(eq(accounts.userId, userId))
-    .limit(1);
-  
-  return !!account;
+export function groupAccountsByType(accounts: Account[]): { type: AccountType; accounts: Account[] }[] {
+  const order: AccountType[] = ["giro", "depot", "cash"];
+  const groupedMap = accounts.reduce((acc, account) => {
+    if (!acc[account.type]) {
+      acc[account.type] = [];
+    }
+    acc[account.type].push(account);
+    return acc;
+  }, {} as Record<AccountType, Account[]>);
+
+  return order
+    .filter(type => groupedMap[type] && groupedMap[type].length > 0)
+    .map(type => ({
+      type,
+      accounts: groupedMap[type]
+    }));
 }
 
-export async function getUnlinkedAccounts(
-  userId: string,
-  _deps = {
-    dbSelect: async (uid: string) => {
-      return await db
-        .select()
-        .from(accounts)
-        .where(and(eq(accounts.userId, uid), isNull(accounts.householdId)));
-    }
+export function normalizeAmount(input: string): string | null {
+  const normalized = input.replace(",", ".");
+  if (isNaN(Number(normalized))) {
+    return null;
   }
-) {
-  return await _deps.dbSelect(userId);
+  return normalized;
 }
 
-export async function linkAccountsToHousehold(
-  accountIds: string[],
-  householdId: string,
-  _deps = {
-    dbUpdate: async (ids: string[], hid: string) => {
-      if (ids.length === 0) return;
-      await db
-        .update(accounts)
-        .set({ householdId: hid })
-        .where(inArray(accounts.id, ids));
-    }
-  }
-) {
-  await _deps.dbUpdate(accountIds, householdId);
+export function formatAmount(amount: number | string): string {
+  const num = typeof amount === "string" ? Number(amount) : amount;
+  return num.toFixed(2);
+}
+
+export function isValidDecimalInput(input: string): boolean {
+  const normalized = input.replace(",", ".");
+  const parts = normalized.split(".");
+  if (parts.length > 2) return false;
+  if (parts.length === 2 && parts[1].length > 2) return false;
+  return true;
 }

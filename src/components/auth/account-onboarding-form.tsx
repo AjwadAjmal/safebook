@@ -13,6 +13,7 @@ import {
   removeAccountFromModal
 } from "@/lib/modal-logic";
 import { Account, AccountType } from "@/types/onboarding";
+import { isValidDecimalInput, normalizeAmount, formatAmount, groupAccountsByType } from "@/lib/account-utils";
 import { AccountCard } from "./account-card";
 import styles from "./auth.module.css";
 
@@ -30,6 +31,8 @@ export function AccountOnboardingForm() {
 
   const getCountByType = (type: AccountType) => accounts.filter(a => a.type === type).length;
   const totalAccounts = accounts.length;
+
+  const groupedAccounts = groupAccountsByType(accounts);
 
   const handleTileClick = (type: AccountType) => {
     setActiveModalType(type);
@@ -104,6 +107,12 @@ export function AccountOnboardingForm() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const { name, value } = e.target;
     if (!modalState) return;
+
+    if (name === "currentValue") {
+      if (!isValidDecimalInput(value)) {
+        return;
+      }
+    }
     
     setModalState(updateAccountData(modalState, index, { [name]: value }));
     
@@ -111,6 +120,17 @@ export function AccountOnboardingForm() {
       const newErrors = [...fieldErrors];
       newErrors[index] = { ...newErrors[index], [name]: undefined };
       setFieldErrors(newErrors);
+    }
+  };
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>, index: number) => {
+    const { name, value } = e.target;
+    if (!modalState || name !== "currentValue" || value === "") return;
+
+    const normalized = normalizeAmount(value);
+    if (normalized !== null) {
+      const formatted = formatAmount(normalized).replace(".", ",");
+      setModalState(updateAccountData(modalState, index, { [name]: formatted }));
     }
   };
 
@@ -182,12 +202,19 @@ export function AccountOnboardingForm() {
 
       {accounts.length > 0 && (
         <div className={styles.accountList}>
-          {accounts.map((acc) => (
-            <AccountCard 
-              key={acc.id} 
-              account={acc} 
-              onEdit={handleEditAccount}
-            />
+          {groupedAccounts.map((group) => (
+            <div key={group.type} className={styles.accountGroup}>
+              <h3 className={styles.categoryHeader}>
+                {getAccountTypeLabel(group.type)}
+              </h3>
+              {group.accounts.map((acc) => (
+                <AccountCard 
+                  key={acc.id} 
+                  account={acc} 
+                  onEdit={handleEditAccount}
+                />
+              ))}
+            </div>
           ))}
         </div>
       )}
@@ -264,6 +291,7 @@ export function AccountOnboardingForm() {
                                 name="currentValue"
                                 value={acc.currentValue}
                                 onChange={(e) => handleInputChange(e, index)}
+                                onBlur={(e) => handleBlur(e, index)}
                                 placeholder="0,00"
                                 inputMode="decimal"
                               />

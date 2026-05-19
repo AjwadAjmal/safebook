@@ -26,7 +26,7 @@ Anstatt unstrukturiert Code zu generieren, folgst du einem strikten Phasen-Model
 1. **Analyse & Challenge:** Nutze `.gemini/skills/grill-with-docs`, um das Feature gegen das Domänenmodell zu prüfen.
 2. **Konzeption (PRD):** Nutze `.gemini/skills/to-prd`, um aus dem Chat-Kontext ein PRD zu erstellen und ins Projekt-Issue-Tracker zu veröffentlichen.
 3. **Issue-Breakdown:** Nutze `.gemini/skills/to-issues`, um das Konzept in vertikale Tickets zu zerlegen.
-4. **TDD-Implementierung:** Nutze `.gemini/skills/tdd`, um offene Issues streng nach dem Red-Green-Refactor-Zyklus umzusetzen.
+4. **TDD-Implementierung:** Nutze `.gemini/skills/tdd`, um offene Issues streng nach dem Red-Green-Refactor-Zyklus umzusetzen. Es wird immer nur EIN ISSUE pro Session implementiert!
 5. **Fehlererkennung:** Führe zwingend `npm run lint` aus, um Fehler sofort zu erkennen.
 ---
 

@@ -1,7 +1,7 @@
 import { OnboardingForm } from "@/components/auth/onboarding-form";
 import styles from "../../page.module.css";
 import { auth } from "@/auth";
-import { getUnlinkedAccounts } from "@/lib/account-utils";
+import { getUnlinkedAccounts } from "@/lib/account-db";
 import { redirect } from "next/navigation";
 
 export default async function OnboardingHouseholdPage() {

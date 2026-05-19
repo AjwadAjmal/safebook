@@ -8,7 +8,7 @@ interface AuthRequest extends NextRequest {
   auth: Session | null;
 }
 
-import { checkUserHasAccounts } from "./lib/account-utils";
+import { checkUserHasAccounts } from "./lib/account-db";
 
 export const proxyLogic = async (req: AuthRequest, hasAccounts?: (userId: string) => Promise<boolean>) => {
   const isLoggedin = !!req.auth;

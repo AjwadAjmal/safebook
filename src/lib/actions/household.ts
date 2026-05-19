@@ -3,7 +3,7 @@
 import { auth } from "@/auth";
 import { createHouseholdSchema, joinHouseholdSchema } from "../validations/household";
 import { createHousehold, updateUserHousehold, findHouseholdByInviteCode } from "../household-utils";
-import { linkAccountsToHousehold } from "../account-utils";
+import { linkAccountsToHousehold } from "../account-db";
 import { redirect } from "next/navigation";
 
 async function getCurrentUser() {

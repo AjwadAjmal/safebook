@@ -1,34 +1,46 @@
 import { test } from "node:test";
 import assert from "node:assert";
-import { getUnlinkedAccounts, linkAccountsToHousehold } from "./account-utils";
+import { groupAccountsByType } from "./account-utils";
+import { Account } from "@/types/onboarding";
 
-test("getUnlinkedAccounts should return accounts with householdId is null for a given userId", async () => {
-  const mockAccounts = [
-    { id: "1", name: "Account 1", householdId: null },
-    { id: "2", name: "Account 2", householdId: null },
+test("groupAccountsByType should group accounts by type and maintain correct order (giro > depot > cash)", () => {
+  const mockAccounts: Account[] = [
+    { id: "1", type: "cash", name: "Kasse 1", institution: "Privat", currentValue: "100", initialDate: "" },
+    { id: "2", type: "giro", name: "Giro 1", institution: "Bank A", currentValue: "1000", initialDate: "" },
+    { id: "3", type: "depot", name: "Depot 1", institution: "Bank B", currentValue: "5000", initialDate: "" },
+    { id: "4", type: "giro", name: "Giro 2", institution: "Bank C", currentValue: "2000", initialDate: "" },
   ];
 
-  const mockDbSelect = async (userId: string) => {
-    return mockAccounts;
-  };
+  const grouped = groupAccountsByType(mockAccounts);
 
-  const result = await getUnlinkedAccounts("user-1", { dbSelect: mockDbSelect });
+  assert.strictEqual(grouped.length, 3);
+  assert.strictEqual(grouped[0].type, "giro");
+  assert.strictEqual(grouped[0].accounts.length, 2);
+  assert.strictEqual(grouped[0].accounts[0].id, "2");
+  assert.strictEqual(grouped[0].accounts[1].id, "4");
 
-  assert.deepStrictEqual(result, mockAccounts);
+  assert.strictEqual(grouped[1].type, "depot");
+  assert.strictEqual(grouped[1].accounts.length, 1);
+  assert.strictEqual(grouped[1].accounts[0].id, "3");
+
+  assert.strictEqual(grouped[2].type, "cash");
+  assert.strictEqual(grouped[2].accounts.length, 1);
+  assert.strictEqual(grouped[2].accounts[0].id, "1");
 });
 
-test("linkAccountsToHousehold should update accounts with householdId", async () => {
-  let updatedAccounts: { accountIds: string[]; householdId: string } | null = null;
-  const mockDbUpdate = async (ids: string[], hid: string) => {
-    updatedAccounts = { accountIds: ids, householdId: hid };
-  };
+test("groupAccountsByType should exclude empty categories", () => {
+  const mockAccounts: Account[] = [
+    { id: "1", type: "giro", name: "Giro 1", institution: "Bank A", currentValue: "1000", initialDate: "" },
+  ];
 
-  const accountIds = ["1", "2"];
-  const householdId = "house-123";
+  const grouped = groupAccountsByType(mockAccounts);
 
-  await linkAccountsToHousehold(accountIds, householdId, { dbUpdate: mockDbUpdate });
+  assert.strictEqual(grouped.length, 1);
+  assert.strictEqual(grouped[0].type, "giro");
+  assert.strictEqual(grouped.find(g => g.type === "depot"), undefined);
+  assert.strictEqual(grouped.find(g => g.type === "cash"), undefined);
+});
 
-  assert.ok(updatedAccounts);
-  assert.deepStrictEqual(updatedAccounts.accountIds, accountIds);
-  assert.strictEqual(updatedAccounts.householdId, householdId);
+test("groupAccountsByType should return an empty array if no accounts are provided", () => {
+  assert.deepStrictEqual(groupAccountsByType([]), []);
 });
