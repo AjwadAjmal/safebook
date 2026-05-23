@@ -237,7 +237,7 @@ export function AccountOnboardingForm() {
             <div className={styles.modalBody}>
               {wizardStep === "confirmation" ? (
                 <div className={styles.confirmationContent}>
-                  <p>Möchtest du ein neues {getAccountTypeLabel(activeModalType).toLowerCase()} anlegen?</p>
+                  <p>Möchtest du ein neues {getAccountTypeLabel(activeModalType)} anlegen?</p>
                 </div>
               ) : (
                 <div className={styles.accordion}>

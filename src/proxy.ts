@@ -39,8 +39,8 @@ export const proxyLogic = async (req: AuthRequest, hasAccounts?: (userId: string
     const hasHousehold = !!req.auth.user.householdId;
 
     if (!hasAccs) {
-      if (nextUrl.pathname !== "/onboarding/accounts") {
-        return Response.redirect(new URL("/onboarding/accounts", nextUrl));
+      if (nextUrl.pathname !== "/createprofile") {
+        return Response.redirect(new URL("/createprofile", nextUrl));
       }
       return;
     }

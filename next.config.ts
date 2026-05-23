@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
 };
 
 module.exports = {
-  allowedDevOrigins: ['kit-webster-logs-knowledgestorm.trycloudflare.com'],
+  allowedDevOrigins: ['valley-paso-considerable-occupational.trycloudflare.com'],
 }
 
 export default nextConfig;

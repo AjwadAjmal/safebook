@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert";
 import { proxyLogic } from "./proxy";
 
-test("proxyLogic should redirect to /onboarding/accounts if logged-in user has no accounts", async () => {
+test("proxyLogic should redirect to /createprofile if logged-in user has no accounts", async () => {
   const req = {
     auth: { user: { id: "user-1", householdId: null } },
     nextUrl: new URL("http://localhost:3000/")
@@ -11,7 +11,7 @@ test("proxyLogic should redirect to /onboarding/accounts if logged-in user has n
 
   const res = await proxyLogic(req, hasAccounts);
   assert.ok(res instanceof Response);
-  assert.strictEqual(res.headers.get("Location"), "http://localhost:3000/onboarding/accounts");
+  assert.strictEqual(res.headers.get("Location"), "http://localhost:3000/createprofile");
 });
 
 test("proxyLogic should redirect to /onboarding/household if user has accounts but no householdId", async () => {
@@ -26,10 +26,10 @@ test("proxyLogic should redirect to /onboarding/household if user has accounts b
   assert.strictEqual(res.headers.get("Location"), "http://localhost:3000/onboarding/household");
 });
 
-test("proxyLogic should allow /onboarding/accounts if user has no accounts", async () => {
+test("proxyLogic should allow /createprofile if user has no accounts", async () => {
   const req = {
     auth: { user: { id: "user-1", householdId: null } },
-    nextUrl: new URL("http://localhost:3000/onboarding/accounts")
+    nextUrl: new URL("http://localhost:3000/createprofile")
   };
   const hasAccounts = async (_userId: string) => false;
 
@@ -37,7 +37,7 @@ test("proxyLogic should allow /onboarding/accounts if user has no accounts", asy
   assert.strictEqual(res, undefined);
 });
 
-test("proxyLogic should redirect from /onboarding/household to /onboarding/accounts if user has no accounts", async () => {
+test("proxyLogic should redirect from /onboarding/household to /createprofile if user has no accounts", async () => {
   const req = {
     auth: { user: { id: "user-1", householdId: null } },
     nextUrl: new URL("http://localhost:3000/onboarding/household")
@@ -46,7 +46,7 @@ test("proxyLogic should redirect from /onboarding/household to /onboarding/accou
 
   const res = await proxyLogic(req, hasAccounts);
   assert.ok(res instanceof Response);
-  assert.strictEqual(res.headers.get("Location"), "http://localhost:3000/onboarding/accounts");
+  assert.strictEqual(res.headers.get("Location"), "http://localhost:3000/createprofile");
 });
 
 test("proxyLogic should allow /onboarding/household if user has accounts but no householdId", async () => {
