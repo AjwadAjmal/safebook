@@ -17,14 +17,11 @@ import { isValidDecimalInput, normalizeAmount, formatAmount, groupAccountsByType
 import { AccountCard } from "./account-card";
 import styles from "./auth.module.css";
 
-type WizardStep = "confirmation" | "form";
-
 export function AccountOnboardingForm() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [activeModalType, setActiveModalType] = useState<AccountType | null>(null);
-  const [wizardStep, setWizardStep] = useState<WizardStep>("confirmation");
   
   const [modalState, setModalState] = useState<ModalState | null>(null);
   const [fieldErrors, setFieldErrors] = useState<ValidationErrors[]>([]);
@@ -36,7 +33,6 @@ export function AccountOnboardingForm() {
 
   const handleTileClick = (type: AccountType) => {
     setActiveModalType(type);
-    setWizardStep("confirmation");
     setModalState(createInitialModalState(type));
     setFieldErrors([]);
     setError(null);
@@ -44,7 +40,6 @@ export function AccountOnboardingForm() {
 
   const handleEditAccount = (account: Account) => {
     setActiveModalType(account.type);
-    setWizardStep("form");
     setModalState(createEditModalState(account.type, accounts, account.id));
     setFieldErrors([]);
     setError(null);
@@ -65,13 +60,8 @@ export function AccountOnboardingForm() {
 
   const handleCloseModal = () => {
     setActiveModalType(null);
-    setWizardStep("confirmation");
     setModalState(null);
     setFieldErrors([]);
-  };
-
-  const handleConfirmAdd = () => {
-    setWizardStep("form");
   };
 
   const handleAddAnother = () => {
@@ -235,99 +225,93 @@ export function AccountOnboardingForm() {
               </button>
             </div>
             <div className={styles.modalBody}>
-              {wizardStep === "confirmation" ? (
-                <div className={styles.confirmationContent}>
-                  <p>Möchtest du ein neues {getAccountTypeLabel(activeModalType)} anlegen?</p>
-                </div>
-              ) : (
-                <div className={styles.accordion}>
-                  {modalState?.accounts.map((acc, index) => {
-                    const isOpen = modalState.editingIndex === index;
-                    const errors = fieldErrors[index] || {};
-                    return (
-                      <div key={acc.id} className={`${styles.accordionItem} ${isOpen ? styles.accordionItemOpen : ""}`}>
-                        <div 
-                          className={styles.accordionHeader}
-                          onClick={() => handleSwitchAccount(index)}
-                        >
-                          <span className={styles.accordionTitle}>
-                            {acc.name || `Neues ${getAccountTypeLabel(activeModalType)}`}
-                          </span>
-                          <span className={styles.accordionIcon}>{isOpen ? "−" : "＋"}</span>
-                        </div>
-                        {isOpen && (
-                          <div className={styles.accordionContent}>
-                            <div className={styles.field}>
-                              <label htmlFor={`name-${index}`}>Bezeichnung</label>
-                              <input
-                                type="text"
-                                id={`name-${index}`}
-                                name="name"
-                                value={acc.name}
-                                onChange={(e) => handleInputChange(e, index)}
-                                placeholder="Privates Girokonto"
-                                maxLength={20}
-                              />
-                              {errors.name && <span className={styles.error}>{errors.name}</span>}
-                            </div>
-                            <div className={styles.field}>
-                              <label htmlFor={`institution-${index}`}>Bank / Institut</label>
-                              <input
-                                type="text"
-                                id={`institution-${index}`}
-                                name="institution"
-                                value={acc.institution}
-                                onChange={(e) => handleInputChange(e, index)}
-                                placeholder="Sparkasse"
-                                maxLength={20}
-                              />
-                              {errors.institution && <span className={styles.error}>{errors.institution}</span>}
-                            </div>
-                            <div className={styles.field}>
-                              <label htmlFor={`currentValue-${index}`}>Aktueller Saldo (€)</label>
-                              <input
-                                type="text"
-                                id={`currentValue-${index}`}
-                                name="currentValue"
-                                value={acc.currentValue}
-                                onChange={(e) => handleInputChange(e, index)}
-                                onBlur={(e) => handleBlur(e, index)}
-                                placeholder="0,00"
-                                inputMode="decimal"
-                              />
-                              {errors.currentValue && <span className={styles.error}>{errors.currentValue}</span>}
-                            </div>
-                            <div className={styles.field}>
-                              <label htmlFor={`initialDate-${index}`}>Datum des Saldos</label>
-                              <input
-                                type="date"
-                                id={`initialDate-${index}`}
-                                name="initialDate"
-                                value={acc.initialDate}
-                                onChange={(e) => handleInputChange(e, index)}
-                              />
-                            </div>
-                            <button
-                              type="button"
-                              className={styles.accordionDeleteButton}
-                              onClick={(e) => handleRemoveFromModal(index, e)}
-                            >
-                              Dieses Konto entfernen
-                            </button>
-                          </div>
-                        )}
+              <div className={styles.accordion}>
+                {modalState?.accounts.map((acc, index) => {
+                  const isOpen = modalState.editingIndex === index;
+                  const errors = fieldErrors[index] || {};
+                  return (
+                    <div key={acc.id} className={`${styles.accordionItem} ${isOpen ? styles.accordionItemOpen : ""}`}>
+                      <div 
+                        className={styles.accordionHeader}
+                        onClick={() => handleSwitchAccount(index)}
+                      >
+                        <span className={styles.accordionTitle}>
+                          {acc.name || `Neues ${getAccountTypeLabel(activeModalType)}`}
+                        </span>
+                        <span className={styles.accordionIcon}>{isOpen ? "−" : "＋"}</span>
                       </div>
-                    );
-                  })}
-                  <button 
-                    type="button" 
-                    className={styles.addAnotherButton}
-                    onClick={handleAddAnother}
-                  >
-                    + Weiteres Konto hinzufügen
-                  </button>
-                </div>
-              )}
+                      {isOpen && (
+                        <div className={styles.accordionContent}>
+                          <div className={styles.field}>
+                            <label htmlFor={`name-${index}`}>Bezeichnung</label>
+                            <input
+                              type="text"
+                              id={`name-${index}`}
+                              name="name"
+                              value={acc.name}
+                              onChange={(e) => handleInputChange(e, index)}
+                              placeholder="Privates Girokonto"
+                              maxLength={20}
+                            />
+                            {errors.name && <span className={styles.error}>{errors.name}</span>}
+                          </div>
+                          <div className={styles.field}>
+                            <label htmlFor={`institution-${index}`}>Bank / Institut</label>
+                            <input
+                              type="text"
+                              id={`institution-${index}`}
+                              name="institution"
+                              value={acc.institution}
+                              onChange={(e) => handleInputChange(e, index)}
+                              placeholder="Sparkasse"
+                              maxLength={20}
+                            />
+                            {errors.institution && <span className={styles.error}>{errors.institution}</span>}
+                          </div>
+                          <div className={styles.field}>
+                            <label htmlFor={`currentValue-${index}`}>Aktueller Saldo (€)</label>
+                            <input
+                              type="text"
+                              id={`currentValue-${index}`}
+                              name="currentValue"
+                              value={acc.currentValue}
+                              onChange={(e) => handleInputChange(e, index)}
+                              onBlur={(e) => handleBlur(e, index)}
+                              placeholder="0,00"
+                              inputMode="decimal"
+                            />
+                            {errors.currentValue && <span className={styles.error}>{errors.currentValue}</span>}
+                          </div>
+                          <div className={styles.field}>
+                            <label htmlFor={`initialDate-${index}`}>Datum des Saldos</label>
+                            <input
+                              type="date"
+                              id={`initialDate-${index}`}
+                              name="initialDate"
+                              value={acc.initialDate}
+                              onChange={(e) => handleInputChange(e, index)}
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            className={styles.accordionDeleteButton}
+                            onClick={(e) => handleRemoveFromModal(index, e)}
+                          >
+                            Dieses Konto entfernen
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                <button 
+                  type="button" 
+                  className={styles.addAnotherButton}
+                  onClick={handleAddAnother}
+                >
+                  + Weiteres Konto hinzufügen
+                </button>
+              </div>
             </div>
             <div className={styles.modalFooter}>
               <button 
@@ -337,23 +321,13 @@ export function AccountOnboardingForm() {
               >
                 Abbrechen
               </button>
-              {wizardStep === "confirmation" ? (
-                <button 
-                  type="button" 
-                  className={styles.button}
-                  onClick={handleConfirmAdd}
-                >
-                  Ja, erstellen
-                </button>
-              ) : (
-                <button 
-                  type="button" 
-                  className={styles.button}
-                  onClick={handleSaveAccount}
-                >
-                  Speichern
-                </button>
-              )}
+              <button 
+                type="button" 
+                className={styles.button}
+                onClick={handleSaveAccount}
+              >
+                Speichern
+              </button>
             </div>
           </div>
         </div>

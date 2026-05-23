@@ -3,6 +3,21 @@ import { describe, it, expect } from 'vitest'
 import { AccountOnboardingForm } from './account-onboarding-form'
 import userEvent from '@testing-library/user-event'
 
+describe('AccountOnboardingForm - Flow', () => {
+  it('opens the form directly when clicking a tile', async () => {
+    const user = userEvent.setup()
+    render(<AccountOnboardingForm />)
+
+    // Open the modal for Girokonto
+    const giroTile = screen.getByText('Girokonto')
+    await user.click(giroTile)
+
+    // Expect the form field "Bezeichnung" to be visible immediately without clicking confirm
+    expect(screen.getByLabelText(/Bezeichnung/i)).toBeInTheDocument()
+    expect(screen.queryByText(/Möchtest du ein neues Girokonto anlegen/i)).not.toBeInTheDocument()
+  })
+})
+
 describe('AccountOnboardingForm - Saldo Validation', () => {
   it('prevents input of more than 2 decimal places in the balance field', async () => {
     const user = userEvent.setup()
@@ -11,10 +26,6 @@ describe('AccountOnboardingForm - Saldo Validation', () => {
     // Open the modal for Girokonto
     const giroTile = screen.getByText('Girokonto')
     await user.click(giroTile)
-
-    // Click "Ja, erstellen" to go to the form step
-    const confirmButton = screen.getByText('Ja, erstellen')
-    await user.click(confirmButton)
 
     // Find the balance input
     const balanceInput = screen.getByLabelText(/Aktueller Saldo/i) as HTMLInputElement
@@ -33,7 +44,6 @@ describe('AccountOnboardingForm - Saldo Validation', () => {
     // Open the modal for Girokonto
     const giroTile = screen.getByText('Girokonto')
     await user.click(giroTile)
-    await user.click(screen.getByText('Ja, erstellen'))
 
     const balanceInput = screen.getByLabelText(/Aktueller Saldo/i) as HTMLInputElement
 
@@ -57,7 +67,6 @@ describe('AccountOnboardingForm - Grouping & Headers', () => {
 
     // Add a Girokonto
     await user.click(screen.getByText('Girokonto'))
-    await user.click(screen.getByText('Ja, erstellen'))
     await user.type(screen.getByLabelText(/Bezeichnung/i), 'Mein Giro')
     await user.type(screen.getByLabelText(/Bank \/ Institut/i), 'Bank A')
     await user.type(screen.getByLabelText(/Aktueller Saldo/i), '1000')
@@ -65,7 +74,6 @@ describe('AccountOnboardingForm - Grouping & Headers', () => {
 
     // Add a Kasse
     await user.click(screen.getByText('Kasse'))
-    await user.click(screen.getByText('Ja, erstellen'))
     await user.type(screen.getByLabelText(/Bezeichnung/i), 'Geldbörse')
     await user.type(screen.getByLabelText(/Bank \/ Institut/i), 'Bar')
     await user.type(screen.getByLabelText(/Aktueller Saldo/i), '50')
