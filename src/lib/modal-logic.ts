@@ -1,4 +1,4 @@
-import { Account, AccountType } from "../types/onboarding";
+import { Account, AccountType } from "../types/profile-creation";
 
 export interface ModalState {
   accounts: Account[];

@@ -10,11 +10,11 @@ interface Account {
   type: string;
 }
 
-interface OnboardingFormProps {
+interface HouseholdOnboardingFormProps {
   unlinkedAccounts?: Account[];
 }
 
-export function OnboardingForm({ unlinkedAccounts = [] }: OnboardingFormProps) {
+export function HouseholdOnboardingForm({ unlinkedAccounts = [] }: HouseholdOnboardingFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [mode, setMode] = useState<"create" | "join">("create");

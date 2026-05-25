@@ -16,3 +16,9 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/lib/actions/account', () => ({
   createProfileAccounts: vi.fn(),
 }))
+
+vi.mock('@/lib/actions/household', () => ({
+  createHouseholdAction: vi.fn(),
+  joinHouseholdAction: vi.fn(),
+}))
+

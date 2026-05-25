@@ -1,4 +1,4 @@
-import { OnboardingForm } from "@/components/auth/onboarding-form";
+import { HouseholdOnboardingForm } from "@/components/auth/household-onboarding-form";
 import styles from "../../page.module.css";
 import { auth } from "@/auth";
 import { getUnlinkedAccounts } from "@/lib/account-db";
@@ -16,7 +16,7 @@ export default async function OnboardingHouseholdPage() {
   return (
     <div className={styles.page}>
       <main className={styles.main}>
-        <OnboardingForm unlinkedAccounts={accounts} />
+        <HouseholdOnboardingForm unlinkedAccounts={accounts} />
       </main>
     </div>
   );

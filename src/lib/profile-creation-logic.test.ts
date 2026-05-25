@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert";
-import { validateAccount } from "./onboarding-logic";
+import { validateAccount } from "./profile-creation-logic";
 
 test("validateAccount should return errors for empty fields", () => {
   const data = {

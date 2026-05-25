@@ -1,4 +1,4 @@
-import { Account, AccountType } from "@/types/onboarding";
+import { Account, AccountType } from "@/types/profile-creation";
 
 export function groupAccountsByType(accounts: Account[]): { type: AccountType; accounts: Account[] }[] {
   const order: AccountType[] = ["giro", "depot", "cash"];

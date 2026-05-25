@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createProfileAccounts } from "@/lib/actions/account";
-import { validateAccount, ValidationErrors } from "@/lib/onboarding-logic";
+import { validateAccount, ValidationErrors } from "@/lib/profile-creation-logic";
 import { 
   ModalState, 
   createInitialModalState, 
@@ -12,12 +12,12 @@ import {
   createEditModalState,
   removeAccountFromModal
 } from "@/lib/modal-logic";
-import { Account, AccountType } from "@/types/onboarding";
+import { Account, AccountType } from "@/types/profile-creation";
 import { isValidDecimalInput, normalizeAmount, formatAmount, groupAccountsByType } from "@/lib/account-utils";
 import { AccountCard } from "./account-card";
 import styles from "./auth.module.css";
 
-export function AccountOnboardingForm() {
+export function ProfileCreationForm() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [accounts, setAccounts] = useState<Account[]>([]);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Account, AccountType } from "@/types/onboarding";
+import { Account, AccountType } from "@/types/profile-creation";
 import styles from "./auth.module.css";
 
 interface AccountCardProps {

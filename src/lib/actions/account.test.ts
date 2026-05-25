@@ -41,20 +41,21 @@ test("createProfileAccounts should handle numbers with commas", async () => {
     },
   ];
 
-  let savedData: any = null;
+  let savedData: { currentValue: string }[] | null = null;
   const deps = {
     getCurrentUser: async () => ({ id: "user_123" }),
-    saveAccounts: async (data: any) => {
+    saveAccounts: async (data: { currentValue: string }[]) => {
       savedData = data;
     },
   };
 
   try {
-    // @ts-ignore
+    // @ts-expect-error - testing with partial input shape
     await createProfileAccounts(accountsToSave, deps);
-  } catch (e: any) {
-    if (e.digest?.startsWith("NEXT_REDIRECT")) {
-      assert.strictEqual(savedData[0].currentValue, "1234.56");
+  } catch (e: unknown) {
+    const err = e as { digest?: string };
+    if (err.digest?.startsWith("NEXT_REDIRECT")) {
+      assert.strictEqual(savedData?.[0]?.currentValue, "1234.56");
       return;
     }
     throw e;

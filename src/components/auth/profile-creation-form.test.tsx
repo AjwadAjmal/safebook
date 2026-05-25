@@ -1,12 +1,12 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
-import { AccountOnboardingForm } from './account-onboarding-form'
+import { ProfileCreationForm } from './profile-creation-form'
 import userEvent from '@testing-library/user-event'
 
-describe('AccountOnboardingForm - Flow', () => {
+describe('ProfileCreationForm - Flow', () => {
   it('opens the form directly when clicking a tile', async () => {
     const user = userEvent.setup()
-    render(<AccountOnboardingForm />)
+    render(<ProfileCreationForm />)
 
     // Open the modal for Girokonto
     const giroTile = screen.getByText('Girokonto')
@@ -18,10 +18,10 @@ describe('AccountOnboardingForm - Flow', () => {
   })
 })
 
-describe('AccountOnboardingForm - Saldo Validation', () => {
+describe('ProfileCreationForm - Saldo Validation', () => {
   it('prevents input of more than 2 decimal places in the balance field', async () => {
     const user = userEvent.setup()
-    render(<AccountOnboardingForm />)
+    render(<ProfileCreationForm />)
 
     // Open the modal for Girokonto
     const giroTile = screen.getByText('Girokonto')
@@ -39,7 +39,7 @@ describe('AccountOnboardingForm - Saldo Validation', () => {
 
   it('formats the balance field correctly on blur', async () => {
     const user = userEvent.setup()
-    render(<AccountOnboardingForm />)
+    render(<ProfileCreationForm />)
 
     // Open the modal for Girokonto
     const giroTile = screen.getByText('Girokonto')
@@ -60,10 +60,10 @@ describe('AccountOnboardingForm - Saldo Validation', () => {
   })
 })
 
-describe('AccountOnboardingForm - Grouping & Headers', () => {
+describe('ProfileCreationForm - Grouping & Headers', () => {
   it('displays category headers when accounts are added', async () => {
     const user = userEvent.setup()
-    render(<AccountOnboardingForm />)
+    render(<ProfileCreationForm />)
 
     // Add a Girokonto
     await user.click(screen.getByText('Girokonto'))

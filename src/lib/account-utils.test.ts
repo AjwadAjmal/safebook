@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert";
 import { groupAccountsByType } from "./account-utils";
-import { Account } from "@/types/onboarding";
+import { Account } from "@/types/profile-creation";
 
 test("groupAccountsByType should group accounts by type and maintain correct order (giro > depot > cash)", () => {
   const mockAccounts: Account[] = [

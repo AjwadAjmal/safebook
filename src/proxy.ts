@@ -30,7 +30,7 @@ export const proxyLogic = async (req: AuthRequest, hasAccounts?: (userId: string
     return Response.redirect(new URL("/login", nextUrl));
   }
 
-  // Multi-step onboarding logic
+  // Profile creation and household onboarding logic
   if (isLoggedin && req.auth?.user) {
     const userId = req.auth.user.id;
     // Verwende die übergebene Funktion oder die Standard-Funktion
