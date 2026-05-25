@@ -50,10 +50,12 @@ export function AccountCard({ account, onEdit }: AccountCardProps) {
       </div>
       {isOpen && (
         <div className={styles.accountCardDetails}>
-          <div className={styles.accountCardDetailRow}>
-            <span className={styles.accountCardDetailLabel}>Institut</span>
-            <span className={styles.accountCardDetailValue}>{account.institution}</span>
-          </div>
+          {account.type !== "cash" && (
+            <div className={styles.accountCardDetailRow}>
+              <span className={styles.accountCardDetailLabel}>Institut</span>
+              <span className={styles.accountCardDetailValue}>{account.institution}</span>
+            </div>
+          )}
           <div className={styles.accountCardDetailRow}>
             <span className={styles.accountCardDetailLabel}>Saldo</span>
             <span className={`${styles.accountCardDetailValue} tabular-nums`}>

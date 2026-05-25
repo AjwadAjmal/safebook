@@ -9,20 +9,30 @@ import { z } from "zod";
 const accountSchema = z.object({
   type: z.enum(["giro", "depot", "cash"]),
   name: z.string().min(2, "Name muss mindestens 2 Zeichen lang sein"),
-  institution: z.string().min(2, "Institut muss mindestens 2 Zeichen lang sein"),
+  institution: z.string().optional().nullable(),
   currentValue: z.number().min(0, "Aktueller Wert darf nicht negativ sein"),
   investedCapital: z.number().min(0, "Investiertes Kapital darf nicht negativ sein").optional(),
   initialDate: z.date(),
-}).refine(
-  (data) => {
+}).superRefine(
+  (data, ctx) => {
     if (data.type === "depot") {
-      return data.investedCapital !== undefined && data.investedCapital !== null;
+      if (data.investedCapital === undefined || data.investedCapital === null) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Investiertes Kapital ist für ein Depot-Konto erforderlich",
+          path: ["investedCapital"],
+        });
+      }
     }
-    return true;
-  },
-  {
-    message: "Investiertes Kapital ist für ein Depot-Konto erforderlich",
-    path: ["investedCapital"],
+    if (data.type === "giro" || data.type === "depot") {
+      if (!data.institution || data.institution.trim().length < 2) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Institut muss mindestens 2 Zeichen lang sein",
+          path: ["institution"],
+        });
+      }
+    }
   }
 );
 
@@ -43,7 +53,7 @@ function parseDecimal(value: string | number | undefined | null): number | undef
 interface AccountInput {
   type: "giro" | "depot" | "cash";
   name: string;
-  institution: string;
+  institution?: string;
   currentValue: string | number;
   investedCapital?: string | number;
   initialDate: string;

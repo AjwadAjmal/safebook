@@ -76,7 +76,6 @@ describe('ProfileCreationForm - Grouping & Headers', () => {
     // Add a Kasse
     await user.click(screen.getByText('Kasse'))
     await user.type(screen.getByLabelText(/Bezeichnung/i), 'Geldbörse')
-    await user.type(screen.getByLabelText(/Bank \/ Institut/i), 'Bar')
     await user.type(screen.getByLabelText(/Aktueller Saldo/i), '50')
     await user.click(screen.getByText('Speichern'))
 
@@ -179,6 +178,24 @@ describe('ProfileCreationForm - Invested Capital Validation', () => {
         investedCapital: '4500,00'
       })
     ])
+  })
+})
+
+describe('ProfileCreationForm - Cash Account Fields', () => {
+  it('hides the Bank / Institut field for cash accounts', async () => {
+    const user = userEvent.setup()
+    render(<ProfileCreationForm />)
+
+    // Open the modal for Kasse
+    const cashTile = screen.getByText('Kasse')
+    await user.click(cashTile)
+
+    // Expect Bank / Institut to NOT be in the document
+    expect(screen.queryByLabelText(/Bank \/ Institut/i)).not.toBeInTheDocument()
+    
+    // Expect designation (Bezeichnung) and balance (Aktueller Saldo) to still be in the document
+    expect(screen.getByLabelText(/Bezeichnung/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Aktueller Saldo/i)).toBeInTheDocument()
   })
 })
 

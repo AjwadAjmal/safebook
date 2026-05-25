@@ -250,24 +250,24 @@ export function ProfileCreationForm() {
                               name="name"
                               value={acc.name}
                               onChange={(e) => handleInputChange(e, index)}
-                              placeholder="Privates Girokonto"
                               maxLength={20}
                             />
                             {errors.name && <span className={styles.error}>{errors.name}</span>}
                           </div>
-                          <div className={styles.field}>
-                            <label htmlFor={`institution-${index}`}>Bank / Institut</label>
-                            <input
-                              type="text"
-                              id={`institution-${index}`}
-                              name="institution"
-                              value={acc.institution}
-                              onChange={(e) => handleInputChange(e, index)}
-                              placeholder="Sparkasse"
-                              maxLength={20}
-                            />
-                            {errors.institution && <span className={styles.error}>{errors.institution}</span>}
-                          </div>
+                          {activeModalType !== "cash" && (
+                            <div className={styles.field}>
+                              <label htmlFor={`institution-${index}`}>Bank / Institut</label>
+                              <input
+                                type="text"
+                                id={`institution-${index}`}
+                                name="institution"
+                                value={acc.institution}
+                                onChange={(e) => handleInputChange(e, index)}
+                                maxLength={20}
+                              />
+                              {errors.institution && <span className={styles.error}>{errors.institution}</span>}
+                            </div>
+                          )}
                           <div className={styles.field}>
                             <label htmlFor={`currentValue-${index}`}>Aktueller Saldo (€)</label>
                             <input

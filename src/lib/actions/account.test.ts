@@ -176,3 +176,73 @@ test("createProfileAccounts should return error if depot account has negative in
   assert.ok(result?.error);
 });
 
+test("createProfileAccounts should save cash account without institution", async () => {
+  let savedData: { userId: string; type: string; institution?: string }[] = [];
+  const accountsToSave = [
+    {
+      type: "cash" as const,
+      name: "Bargeld Kasse",
+      currentValue: 200,
+      initialDate: new Date().toISOString(),
+    }
+  ];
+
+  const deps = {
+    getCurrentUser: async () => ({ id: "user-1" }),
+    saveAccounts: async (data: { userId: string; type: string; institution?: string }[]) => {
+      savedData = data;
+      return data;
+    },
+  };
+
+  try {
+    await createProfileAccounts(accountsToSave, deps);
+    assert.fail("Should have redirected");
+  } catch (e: unknown) {
+    const error = e as { digest?: string };
+    if (error.digest?.startsWith("NEXT_REDIRECT")) {
+      assert.strictEqual(savedData.length, 1);
+      assert.strictEqual(savedData[0].userId, "user-1");
+      assert.strictEqual(savedData[0].type, "cash");
+      assert.strictEqual(savedData[0].institution, undefined);
+      assert.ok(error.digest.includes("/onboarding/household"));
+    } else {
+      throw e;
+    }
+  }
+});
+
+test("createProfileAccounts should return error if giro account has no institution", async () => {
+  const result = await createProfileAccounts([
+    {
+      type: "giro",
+      name: "Girokonto",
+      currentValue: 1500,
+      initialDate: new Date().toISOString(),
+    }
+  ], {
+    getCurrentUser: async () => ({ id: "user-1" }),
+    saveAccounts: async () => [],
+  });
+
+  assert.ok(result?.error);
+  assert.ok(result.error.includes("Institut muss mindestens 2 Zeichen"));
+});
+
+test("createProfileAccounts should return error if depot account has no institution", async () => {
+  const result = await createProfileAccounts([
+    {
+      type: "depot",
+      name: "Aktiendepot",
+      currentValue: 1500,
+      investedCapital: 1000,
+      initialDate: new Date().toISOString(),
+    }
+  ], {
+    getCurrentUser: async () => ({ id: "user-1" }),
+    saveAccounts: async () => [],
+  });
+
+  assert.ok(result?.error);
+  assert.ok(result.error.includes("Institut muss mindestens 2 Zeichen"));
+});

@@ -105,3 +105,19 @@ test("validateAccount should accept valid investedCapital for depot account", ()
   assert.strictEqual(errors.investedCapital, undefined);
 });
 
+test("validateAccount should not require institution for cash account", () => {
+  const data = {
+    type: "cash" as const,
+    name: "Portemonnaie",
+    currentValue: "50",
+    initialDate: "2024-01-01"
+  };
+
+  const errors = validateAccount(data);
+
+  assert.strictEqual(errors.name, undefined);
+  assert.strictEqual(errors.institution, undefined);
+  assert.strictEqual(errors.currentValue, undefined);
+});
+
+

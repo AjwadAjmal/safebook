@@ -25,7 +25,7 @@ export const accounts = pgTable("accounts", {
   id: uuid("id").primaryKey().defaultRandom(),
   type: accountTypeEnum("type").notNull(),
   name: varchar("name", { length: 255 }).notNull(),
-  institution: varchar("institution", { length: 255 }).notNull(),
+  institution: varchar("institution", { length: 255 }),
   currentValue: decimal("current_value", { precision: 12, scale: 2 }).notNull(),
   investedCapital: decimal("invested_capital", { precision: 12, scale: 2 }),
   initialDate: timestamp("initial_date").notNull(),

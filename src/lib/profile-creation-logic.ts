@@ -14,7 +14,7 @@ export function validateAccount(data: AccountData): ValidationErrors {
     errors.name = "Name ist erforderlich.";
   }
 
-  if (!data.institution.trim()) {
+  if (data.type !== "cash" && (!data.institution || !data.institution.trim())) {
     errors.institution = "Institut ist erforderlich.";
   }
 

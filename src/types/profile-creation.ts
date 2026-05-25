@@ -4,7 +4,7 @@ export interface Account {
   id: string;
   type: AccountType;
   name: string;
-  institution: string;
+  institution?: string;
   currentValue: string;
   investedCapital?: string;
   initialDate: string;
@@ -13,7 +13,7 @@ export interface Account {
 export interface AccountData {
   type: AccountType;
   name: string;
-  institution: string;
+  institution?: string;
   currentValue: string;
   investedCapital?: string;
   initialDate: string;
