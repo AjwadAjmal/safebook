@@ -46,3 +46,20 @@ test("createEditModalState should initialize with existing accounts of type and 
   assert.strictEqual(state.accounts[1].id, "3");
   assert.strictEqual(state.editingIndex, 1, "Should focus on account with ID 3");
 });
+
+test("createInitialModalState should initialize investedCapital as empty string for depot accounts", () => {
+  const state = createInitialModalState("depot");
+  assert.strictEqual(state.accounts[0].type, "depot");
+  assert.strictEqual(state.accounts[0].investedCapital, "");
+  
+  const giroState = createInitialModalState("giro");
+  assert.strictEqual(giroState.accounts[0].investedCapital, undefined);
+});
+
+test("addAnotherAccount should initialize investedCapital as empty string for depot accounts", () => {
+  const initialState = createInitialModalState("giro");
+  const nextState = addAnotherAccount(initialState, "depot");
+  assert.strictEqual(nextState.accounts[1].type, "depot");
+  assert.strictEqual(nextState.accounts[1].investedCapital, "");
+});
+

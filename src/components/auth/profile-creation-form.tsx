@@ -98,7 +98,7 @@ export function ProfileCreationForm() {
     const { name, value } = e.target;
     if (!modalState) return;
 
-    if (name === "currentValue") {
+    if (name === "currentValue" || name === "investedCapital") {
       if (!isValidDecimalInput(value)) {
         return;
       }
@@ -115,7 +115,7 @@ export function ProfileCreationForm() {
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>, index: number) => {
     const { name, value } = e.target;
-    if (!modalState || name !== "currentValue" || value === "") return;
+    if (!modalState || (name !== "currentValue" && name !== "investedCapital") || value === "") return;
 
     const normalized = normalizeAmount(value);
     if (normalized !== null) {
@@ -282,6 +282,22 @@ export function ProfileCreationForm() {
                             />
                             {errors.currentValue && <span className={styles.error}>{errors.currentValue}</span>}
                           </div>
+                          {activeModalType === "depot" && (
+                            <div className={styles.field}>
+                              <label htmlFor={`investedCapital-${index}`}>Investiertes Kapital (€)</label>
+                              <input
+                                type="text"
+                                id={`investedCapital-${index}`}
+                                name="investedCapital"
+                                value={acc.investedCapital || ""}
+                                onChange={(e) => handleInputChange(e, index)}
+                                onBlur={(e) => handleBlur(e, index)}
+                                placeholder="0,00"
+                                inputMode="decimal"
+                              />
+                              {errors.investedCapital && <span className={styles.error}>{errors.investedCapital}</span>}
+                            </div>
+                          )}
                           <div className={styles.field}>
                             <label htmlFor={`initialDate-${index}`}>Datum des Saldos</label>
                             <input

@@ -120,3 +120,59 @@ test("createProfileAccounts should save accounts and redirect", async () => {
     }
   }
 });
+
+test("createProfileAccounts should return error if depot account is provided without investedCapital", async () => {
+  const result = await createProfileAccounts([
+    {
+      type: "depot",
+      name: "Aktiendepot",
+      institution: "Trade Republic",
+      currentValue: 5000,
+      initialDate: new Date().toISOString(),
+    }
+  ], {
+    getCurrentUser: async () => ({ id: "user-1" }),
+    saveAccounts: async () => [],
+  });
+
+  assert.ok(result?.error);
+  assert.ok(result.error.includes("Investiertes Kapital"));
+});
+
+test("createProfileAccounts should return error if depot account has empty investedCapital string", async () => {
+  const result = await createProfileAccounts([
+    {
+      type: "depot",
+      name: "Aktiendepot",
+      institution: "Trade Republic",
+      currentValue: 5000,
+      investedCapital: "",
+      initialDate: new Date().toISOString(),
+    }
+  ], {
+    getCurrentUser: async () => ({ id: "user-1" }),
+    saveAccounts: async () => [],
+  });
+
+  assert.ok(result?.error);
+  assert.ok(result.error.includes("Investiertes Kapital"));
+});
+
+test("createProfileAccounts should return error if depot account has negative investedCapital", async () => {
+  const result = await createProfileAccounts([
+    {
+      type: "depot",
+      name: "Aktiendepot",
+      institution: "Trade Republic",
+      currentValue: 5000,
+      investedCapital: -10,
+      initialDate: new Date().toISOString(),
+    }
+  ], {
+    getCurrentUser: async () => ({ id: "user-1" }),
+    saveAccounts: async () => [],
+  });
+
+  assert.ok(result?.error);
+});
+

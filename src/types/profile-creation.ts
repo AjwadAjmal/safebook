@@ -11,8 +11,11 @@ export interface Account {
 }
 
 export interface AccountData {
+  type: AccountType;
   name: string;
   institution: string;
   currentValue: string;
+  investedCapital?: string;
   initialDate: string;
 }
+

@@ -12,7 +12,8 @@ export function createInitialModalState(type: AccountType): ModalState {
     name: "",
     institution: "",
     currentValue: "",
-    initialDate: new Date().toISOString().split('T')[0]
+    initialDate: new Date().toISOString().split('T')[0],
+    ...(type === "depot" ? { investedCapital: "" } : {})
   };
   return {
     accounts: [newAccount],
@@ -27,7 +28,8 @@ export function addAnotherAccount(state: ModalState, type: AccountType): ModalSt
     name: "",
     institution: "",
     currentValue: "",
-    initialDate: new Date().toISOString().split('T')[0]
+    initialDate: new Date().toISOString().split('T')[0],
+    ...(type === "depot" ? { investedCapital: "" } : {})
   };
   return {
     accounts: [...state.accounts, newAccount],

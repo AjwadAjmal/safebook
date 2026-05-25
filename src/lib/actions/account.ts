@@ -11,11 +11,34 @@ const accountSchema = z.object({
   name: z.string().min(2, "Name muss mindestens 2 Zeichen lang sein"),
   institution: z.string().min(2, "Institut muss mindestens 2 Zeichen lang sein"),
   currentValue: z.number().min(0, "Aktueller Wert darf nicht negativ sein"),
-  investedCapital: z.number().min(0).optional(),
+  investedCapital: z.number().min(0, "Investiertes Kapital darf nicht negativ sein").optional(),
   initialDate: z.date(),
-});
+}).refine(
+  (data) => {
+    if (data.type === "depot") {
+      return data.investedCapital !== undefined && data.investedCapital !== null;
+    }
+    return true;
+  },
+  {
+    message: "Investiertes Kapital ist für ein Depot-Konto erforderlich",
+    path: ["investedCapital"],
+  }
+);
 
 export const accountsSchema = z.array(accountSchema).min(1, "Mindestens ein Konto muss angelegt werden.");
+
+function parseDecimal(value: string | number | undefined | null): number | undefined {
+  if (value === undefined || value === null || value === "") return undefined;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (trimmed === "") return undefined;
+    const parsed = Number(trimmed.replace(",", "."));
+    return isNaN(parsed) ? undefined : parsed;
+  }
+  const num = Number(value);
+  return isNaN(num) ? undefined : num;
+}
 
 interface AccountInput {
   type: "giro" | "depot" | "cash";
@@ -47,10 +70,8 @@ export async function createProfileAccounts(
   const parsedAccounts = accountsList.map(acc => ({
     ...acc,
     initialDate: new Date(acc.initialDate),
-    currentValue: typeof acc.currentValue === "string" ? Number(acc.currentValue.replace(",", ".")) : Number(acc.currentValue),
-    investedCapital: acc.investedCapital !== undefined 
-      ? (typeof acc.investedCapital === "string" ? Number(acc.investedCapital.replace(",", ".")) : Number(acc.investedCapital))
-      : undefined,
+    currentValue: parseDecimal(acc.currentValue) ?? NaN,
+    investedCapital: parseDecimal(acc.investedCapital),
   }));
 
   const result = accountsSchema.safeParse(parsedAccounts);

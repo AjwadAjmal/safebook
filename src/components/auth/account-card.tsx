@@ -60,6 +60,14 @@ export function AccountCard({ account, onEdit }: AccountCardProps) {
               {account.currentValue} €
             </span>
           </div>
+          {account.type === "depot" && account.investedCapital !== undefined && (
+            <div className={styles.accountCardDetailRow}>
+              <span className={styles.accountCardDetailLabel}>Investiertes Kapital</span>
+              <span className={`${styles.accountCardDetailValue} tabular-nums`}>
+                {account.investedCapital} €
+              </span>
+            </div>
+          )}
           <div className={styles.accountCardDetailRow}>
             <span className={styles.accountCardDetailLabel}>Datum</span>
             <span className={styles.accountCardDetailValue}>

@@ -4,6 +4,7 @@ import { validateAccount } from "./profile-creation-logic";
 
 test("validateAccount should return errors for empty fields", () => {
   const data = {
+    type: "giro" as const,
     name: "",
     institution: "",
     currentValue: "",
@@ -19,6 +20,7 @@ test("validateAccount should return errors for empty fields", () => {
 
 test("validateAccount should return no errors for valid fields", () => {
   const data = {
+    type: "giro" as const,
     name: "Giro",
     institution: "Sparkasse",
     currentValue: "1000",
@@ -32,6 +34,7 @@ test("validateAccount should return no errors for valid fields", () => {
 
 test("validateAccount should validate numeric balance", () => {
   const data = {
+    type: "giro" as const,
     name: "Giro",
     institution: "Sparkasse",
     currentValue: "abc",
@@ -42,3 +45,63 @@ test("validateAccount should validate numeric balance", () => {
 
   assert.strictEqual(errors.currentValue, "Saldo muss eine Zahl sein.");
 });
+
+test("validateAccount should require investedCapital for depot account", () => {
+  const data = {
+    type: "depot" as const,
+    name: "Aktiendepot",
+    institution: "Trade Republic",
+    currentValue: "5000",
+    initialDate: "2024-01-01"
+  };
+
+  const errors = validateAccount(data);
+
+  assert.strictEqual(errors.investedCapital, "Investiertes Kapital ist erforderlich.");
+});
+
+test("validateAccount should require investedCapital to be numeric for depot account", () => {
+  const data = {
+    type: "depot" as const,
+    name: "Aktiendepot",
+    institution: "Trade Republic",
+    currentValue: "5000",
+    investedCapital: "abc",
+    initialDate: "2024-01-01"
+  };
+
+  const errors = validateAccount(data);
+
+  assert.strictEqual(errors.investedCapital, "Investiertes Kapital muss eine Zahl sein.");
+});
+
+test("validateAccount should require investedCapital to be non-negative for depot account", () => {
+  const data = {
+    type: "depot" as const,
+    name: "Aktiendepot",
+    institution: "Trade Republic",
+    currentValue: "5000",
+    investedCapital: "-100",
+    initialDate: "2024-01-01"
+  };
+
+  const errors = validateAccount(data);
+
+  assert.strictEqual(errors.investedCapital, "Investiertes Kapital darf nicht negativ sein.");
+});
+
+test("validateAccount should accept valid investedCapital for depot account", () => {
+  const data = {
+    type: "depot" as const,
+    name: "Aktiendepot",
+    institution: "Trade Republic",
+    currentValue: "5000",
+    investedCapital: "4000",
+    initialDate: "2024-01-01"
+  };
+
+  const errors = validateAccount(data);
+
+  assert.strictEqual(errors.investedCapital, undefined);
+});
+
