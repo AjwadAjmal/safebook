@@ -341,7 +341,7 @@ export function AccountOnboardingForm() {
           className={styles.button} 
           disabled={isLoading || totalAccounts === 0}
         >
-          {isLoading ? "Wird gespeichert..." : "Konten speichern & Weiter"}
+          {isLoading ? "Wird gespeichert..." : "Profil speichern"}
         </button>
       </form>
     </div>

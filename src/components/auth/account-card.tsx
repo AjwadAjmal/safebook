@@ -62,7 +62,9 @@ export function AccountCard({ account, onEdit }: AccountCardProps) {
           </div>
           <div className={styles.accountCardDetailRow}>
             <span className={styles.accountCardDetailLabel}>Datum</span>
-            <span className={styles.accountCardDetailValue}>{account.initialDate}</span>
+            <span className={styles.accountCardDetailValue}>
+              {account.initialDate ? account.initialDate.split("-").reverse().join(".") : ""}
+            </span>
           </div>
           {onEdit && (
             <button 
