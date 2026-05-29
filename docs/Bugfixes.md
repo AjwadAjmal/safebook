@@ -2,6 +2,23 @@
 
 Hier sind dokumentierte Fehler und deren Behebung im Projekt.
 
+## 002 - 2026-05-29 - Middleware-Laufzeitfehler durch Datenbank-Importe in NextAuth (Edge Runtime)
+
+**Betroffene Dateien / Kontext:**
+- [auth.config.ts](file:///C:/Users/Ajwad/Documents/vs_workspace/safebook/src/auth.config.ts)
+- [proxy.ts](file:///C:/Users/Ajwad/Documents/vs_workspace/safebook/src/proxy.ts)
+- [db/index.ts](file:///C:/Users/Ajwad/Documents/vs_workspace/safebook/src/db/index.ts)
+
+### Problem
+Nach der Implementierung der Performance-Optimierungen in den Issues #33 und #34 trat ein Fehler in der Next.js-Middleware auf, wodurch das Routing der Anwendung blockiert wurde.
+
+Die Ursache lag darin, dass in der NextAuth-Konfiguration `auth.config.ts` die Funktion `checkUserHasAccounts` importiert und im `jwt`-Callback aufgerufen wurde. Da `auth.config.ts` von der Middleware importiert und in der Next.js **Edge Runtime** ausgeführt wird, führt jeder Import, der transitiv auf Node.js-spezifische Bibliotheken (wie das `pg`-Modul für die PostgreSQL-Verbindung) verweist, zu Kompilierungs- oder Laufzeitfehlern, da TCP-Verbindungen und Node-Bibliotheken (z. B. `net`, `tls`) in der Edge-Runtime nicht unterstützt werden.
+
+### Schrittweiser Lösungsansatz
+1. **Zustand zurücksetzen:** Die fehlerhaften Commits `f472d1c` und `70c5573` wurden mittels `git reset --hard afd6972` verworfen, um die Codebase wieder in den stabilen Zustand vor der Einführung dieser Optimierungen zu bringen.
+2. **Issue-Löschung:** Die fehlerhaften Issues #33 und #34 sowie das übergeordnete PRD #32 wurden aus dem GitHub Issue Tracker gelöscht, da das gewählte Architekturmuster (Datenbankzugriff im `jwt`-Callback von `auth.config.ts`) nicht mit den Einschränkungen der Middleware-Laufzeitumgebung kompatibel war.
+3. **Tests & Linting verifizieren:** Nach dem Hard-Reset wurden `npm run lint` und `npm test` ausgeführt. Alle 44 Tests (einschließlich der Middleware-Routing-Tests in `src/proxy.test.ts`) liefen erfolgreich durch und bestätigten die Wiederherstellung der korrekten Funktionalität.
+
 ## 001 - 2026-05-29 - Ungültiger Export in Server Action Datei (Next.js)
 
 **Betroffene Dateien / Kontext:**
