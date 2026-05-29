@@ -36,7 +36,7 @@ const accountSchema = z.object({
   }
 );
 
-export const accountsSchema = z.array(accountSchema).min(1, "Mindestens ein Konto muss angelegt werden.");
+const accountsSchema = z.array(accountSchema).min(1, "Mindestens ein Konto muss angelegt werden.");
 
 function parseDecimal(value: string | number | undefined | null): number | undefined {
   if (value === undefined || value === null || value === "") return undefined;
@@ -92,10 +92,17 @@ export async function createProfileAccounts(
 
   try {
     const dataToSave = result.data.map(acc => ({
-      ...acc,
+      type: acc.type,
+      name: acc.name,
+      institution: acc.institution !== undefined && acc.institution !== null && acc.institution.trim() !== ""
+        ? acc.institution
+        : null,
+      currentValue: acc.currentValue.toString(),
+      investedCapital: acc.investedCapital !== undefined && acc.investedCapital !== null
+        ? acc.investedCapital.toString()
+        : null,
+      initialDate: acc.initialDate,
       userId: user.id as string,
-      currentValue: acc.currentValue.toString(), // decimal in schema
-      investedCapital: acc.investedCapital?.toString(),
     }));
 
     await deps.saveAccounts(dataToSave);
@@ -104,5 +111,5 @@ export async function createProfileAccounts(
     return { error: "Fehler beim Speichern der Konten." };
   }
 
-  redirect("/onboarding/household");
+  redirect("/onboarding/household?saved=true");
 }

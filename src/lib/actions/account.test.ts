@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert";
 import { createProfileAccounts } from "./account";
+import { accounts } from "../../db/schema";
 
 test("createProfileAccounts should return error if no accounts provided", async () => {
   const result = await createProfileAccounts([], {
@@ -114,7 +115,7 @@ test("createProfileAccounts should save accounts and redirect", async () => {
       assert.strictEqual(savedData[0].type, "giro");
       assert.strictEqual(savedData[1].type, "depot");
       assert.strictEqual(savedData[1].investedCapital, "4500");
-      assert.ok(error.digest.includes("/onboarding/household"));
+      assert.ok(error.digest.includes("/onboarding/household?saved=true"));
     } else {
       throw e;
     }
@@ -204,8 +205,8 @@ test("createProfileAccounts should save cash account without institution", async
       assert.strictEqual(savedData.length, 1);
       assert.strictEqual(savedData[0].userId, "user-1");
       assert.strictEqual(savedData[0].type, "cash");
-      assert.strictEqual(savedData[0].institution, undefined);
-      assert.ok(error.digest.includes("/onboarding/household"));
+      assert.strictEqual(savedData[0].institution, null);
+      assert.ok(error.digest.includes("/onboarding/household?saved=true"));
     } else {
       throw e;
     }
@@ -246,3 +247,84 @@ test("createProfileAccounts should return error if depot account has no institut
   assert.ok(result?.error);
   assert.ok(result.error.includes("Institut muss mindestens 2 Zeichen"));
 });
+
+test("createProfileAccounts should persist exact database payload matching accounts insert schema", async () => {
+  let savedData: (typeof accounts.$inferInsert)[] = [];
+  const accountsToSave = [
+    {
+      type: "giro" as const,
+      name: "Checking",
+      institution: "Bank A",
+      currentValue: "1500.50",
+      initialDate: "2026-05-29",
+    },
+    {
+      type: "depot" as const,
+      name: "Brokerage",
+      institution: "Broker B",
+      currentValue: "5000.00",
+      investedCapital: "4500.00",
+      initialDate: "2026-05-29",
+    },
+    {
+      type: "cash" as const,
+      name: "Wallet",
+      currentValue: "200.00",
+      initialDate: "2026-05-29",
+    }
+  ];
+
+  const deps = {
+    getCurrentUser: async () => ({ id: "user-test-id" }),
+    saveAccounts: async (data: (typeof accounts.$inferInsert)[]) => {
+      savedData = data;
+      return data;
+    },
+  };
+
+  try {
+    await createProfileAccounts(accountsToSave, deps);
+    assert.fail("Should have redirected");
+  } catch (e: unknown) {
+    const error = e as { digest?: string };
+    if (error.digest?.startsWith("NEXT_REDIRECT")) {
+      assert.strictEqual(savedData.length, 3);
+      
+      // Giro Assertions
+      const giro = savedData.find(a => a.type === "giro");
+      assert.ok(giro);
+      assert.strictEqual(giro.userId, "user-test-id");
+      assert.strictEqual(giro.name, "Checking");
+      assert.strictEqual(giro.institution, "Bank A");
+      assert.strictEqual(giro.currentValue, "1500.5");
+      assert.strictEqual(giro.investedCapital, null);
+      assert.ok(giro.initialDate instanceof Date);
+      assert.strictEqual(giro.initialDate.toISOString(), new Date("2026-05-29").toISOString());
+
+      // Depot Assertions
+      const depot = savedData.find(a => a.type === "depot");
+      assert.ok(depot);
+      assert.strictEqual(depot.userId, "user-test-id");
+      assert.strictEqual(depot.name, "Brokerage");
+      assert.strictEqual(depot.institution, "Broker B");
+      assert.strictEqual(depot.currentValue, "5000");
+      assert.strictEqual(depot.investedCapital, "4500");
+      assert.ok(depot.initialDate instanceof Date);
+
+      // Cash Assertions
+      const cash = savedData.find(a => a.type === "cash");
+      assert.ok(cash);
+      assert.strictEqual(cash.userId, "user-test-id");
+      assert.strictEqual(cash.name, "Wallet");
+      assert.strictEqual(cash.institution, null); // should be null in DB, not undefined
+      assert.strictEqual(cash.currentValue, "200");
+      assert.strictEqual(cash.investedCapital, null);
+      assert.ok(cash.initialDate instanceof Date);
+
+      assert.ok(error.digest.includes("/onboarding/household?saved=true"));
+    } else {
+      throw e;
+    }
+  }
+});
+
