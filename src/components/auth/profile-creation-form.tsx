@@ -15,6 +15,7 @@ import {
 import { Account, AccountType } from "@/types/profile-creation";
 import { isValidDecimalInput, normalizeAmount, formatAmount, groupAccountsByType } from "@/lib/account-utils";
 import { AccountCard } from "./account-card";
+import { Toast } from "@/components/ui/toast";
 import styles from "./auth.module.css";
 
 export function ProfileCreationForm() {
@@ -350,8 +351,6 @@ export function ProfileCreationForm() {
       )}
 
       <form onSubmit={handleSubmit} className={styles.form}>
-        {error && <div className={styles.error}>{error}</div>}
-        
         <button 
           type="submit" 
           className={styles.button} 
@@ -360,6 +359,15 @@ export function ProfileCreationForm() {
           {isLoading ? "Wird gespeichert..." : "Profil speichern"}
         </button>
       </form>
+
+      {error && (
+        <Toast
+          message={error}
+          type="error"
+          duration={4000}
+          onClose={() => setError(null)}
+        />
+      )}
     </div>
   );
 }

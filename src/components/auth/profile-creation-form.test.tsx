@@ -199,5 +199,78 @@ describe('ProfileCreationForm - Cash Account Fields', () => {
   })
 })
 
+describe('ProfileCreationForm - Error Handling (Toast)', () => {
+  it('displays an error toast when creation fails, and does not show inline error', async () => {
+    vi.mocked(createProfileAccounts).mockResolvedValueOnce({ error: 'Datenbankfehler beim Speichern' })
+    const user = userEvent.setup()
+    render(<ProfileCreationForm />)
+
+    // Add a Girokonto so we can submit
+    await user.click(screen.getByText('Girokonto'))
+    await user.type(screen.getByLabelText(/Bezeichnung/i), 'Mein Giro')
+    await user.type(screen.getByLabelText(/Bank \/ Institut/i), 'Bank A')
+    await user.type(screen.getByLabelText(/Aktueller Saldo/i), '1000')
+    await user.click(screen.getByText('Speichern'))
+
+    // Submit form which will fail
+    await user.click(screen.getByText('Profil speichern'))
+
+    // Expect the error toast to be in the document
+    expect(await screen.findByText('Datenbankfehler beim Speichern')).toBeInTheDocument()
+
+    // Expect no static inline error container inside the form
+    const formElement = screen.getByRole('button', { name: 'Profil speichern' }).closest('form')
+    expect(formElement).not.toHaveTextContent('Datenbankfehler beim Speichern')
+  })
+
+  it('clears the error state when closing the toast', async () => {
+    vi.mocked(createProfileAccounts).mockResolvedValueOnce({ error: 'Datenbankfehler beim Speichern' })
+    const user = userEvent.setup()
+    render(<ProfileCreationForm />)
+
+    // Add a Girokonto so we can submit
+    await user.click(screen.getByText('Girokonto'))
+    await user.type(screen.getByLabelText(/Bezeichnung/i), 'Mein Giro')
+    await user.type(screen.getByLabelText(/Bank \/ Institut/i), 'Bank A')
+    await user.type(screen.getByLabelText(/Aktueller Saldo/i), '1000')
+    await user.click(screen.getByText('Speichern'))
+
+    // Submit form which will fail
+    await user.click(screen.getByText('Profil speichern'))
+
+    // Expect the error toast to be in the document
+    expect(await screen.findByText('Datenbankfehler beim Speichern')).toBeInTheDocument()
+
+    // Click close button on the toast
+    const closeButton = screen.getByRole('button', { name: /schließen/i })
+    await user.click(closeButton)
+
+    // Expect the toast to be removed
+    expect(screen.queryByText('Datenbankfehler beim Speichern')).not.toBeInTheDocument()
+  })
+
+  it('displays a validation error toast when trying to submit without accounts, and clears on close', async () => {
+    const user = userEvent.setup()
+    render(<ProfileCreationForm />)
+
+    // Submit without any accounts (by-passing disabled button by submitting the form directly)
+    const formElement = screen.getByRole('button', { name: 'Profil speichern' }).closest('form')!
+    fireEvent.submit(formElement)
+
+    // Expect the validation error toast to be in the document
+    expect(await screen.findByText('Bitte wähle mindestens ein Konto aus.')).toBeInTheDocument()
+
+    // Expect no static inline error container inside the form
+    expect(formElement).not.toHaveTextContent('Bitte wähle mindestens ein Konto aus.')
+
+    // Click close button on the toast
+    const closeButton = screen.getByRole('button', { name: /schließen/i })
+    await user.click(closeButton)
+
+    // Expect the toast to be removed
+    expect(screen.queryByText('Bitte wähle mindestens ein Konto aus.')).not.toBeInTheDocument()
+  })
+})
+
 
 
