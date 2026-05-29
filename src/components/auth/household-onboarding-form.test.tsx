@@ -1,9 +1,28 @@
 import { render, screen } from '@testing-library/react'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { HouseholdOnboardingForm } from './household-onboarding-form'
 import userEvent from '@testing-library/user-event'
 
+let mockQueryString = ''
+const mockReplaceState = vi.fn()
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    refresh: vi.fn(),
+  }),
+  useSearchParams: () => new URLSearchParams(mockQueryString),
+  usePathname: () => '/onboarding/household',
+}))
+
 describe('HouseholdOnboardingForm - Flow', () => {
+  beforeEach(() => {
+    mockQueryString = ''
+    vi.clearAllMocks()
+    vi.stubGlobal('history', {
+      replaceState: mockReplaceState,
+    })
+  })
   it('renders the household creation form by default', () => {
     render(<HouseholdOnboardingForm />)
     
@@ -45,5 +64,23 @@ describe('HouseholdOnboardingForm - Flow', () => {
     expect(screen.getByText('Konten zum Importieren auswählen')).toBeInTheDocument()
     expect(screen.getByText('Girokonto A')).toBeInTheDocument()
     expect(screen.getByText('Depot B')).toBeInTheDocument()
+  })
+
+  it('displays a success toast when "saved=true" is in query parameters', async () => {
+    mockQueryString = 'saved=true'
+
+    render(<HouseholdOnboardingForm />)
+
+    // Check that success toast with message "Konten erfolgreich gespeichert." is displayed
+    expect(await screen.findByText('Konten erfolgreich gespeichert.')).toBeInTheDocument()
+  })
+
+  it('cleans up the "saved" query parameter from the URL immediately', () => {
+    mockQueryString = 'saved=true'
+
+    render(<HouseholdOnboardingForm />)
+
+    // Check that replaceState was called to remove the query parameter
+    expect(mockReplaceState).toHaveBeenCalledWith(null, '', '/onboarding/household')
   })
 })

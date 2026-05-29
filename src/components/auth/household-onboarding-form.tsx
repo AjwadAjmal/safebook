@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams, usePathname } from "next/navigation";
 import { createHouseholdAction, joinHouseholdAction } from "@/lib/actions/household";
+import { Toast } from "@/components/ui/toast";
 import styles from "./auth.module.css";
 
 interface Account {
@@ -15,9 +17,25 @@ interface HouseholdOnboardingFormProps {
 }
 
 export function HouseholdOnboardingForm({ unlinkedAccounts = [] }: HouseholdOnboardingFormProps) {
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [mode, setMode] = useState<"create" | "join">("create");
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("saved") === "true") {
+      const timer = setTimeout(() => {
+        setShowSuccessToast(true);
+      }, 0);
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("saved");
+      const query = params.toString() ? `?${params.toString()}` : "";
+      window.history.replaceState(null, "", `${pathname}${query}`);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, pathname]);
 
   async function handleCreate(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -76,6 +94,13 @@ export function HouseholdOnboardingForm({ unlinkedAccounts = [] }: HouseholdOnbo
 
   return (
     <div className={styles.container}>
+      {showSuccessToast && (
+        <Toast
+          message="Konten erfolgreich gespeichert."
+          type="success"
+          onClose={() => setShowSuccessToast(false)}
+        />
+      )}
       <div className={styles.intro}>
         <h1 className={styles.title}>Willkommen bei Safebook</h1>
         <p className={styles.footer}>

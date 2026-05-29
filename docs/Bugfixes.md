@@ -2,7 +2,7 @@
 
 Hier sind dokumentierte Fehler und deren Behebung im Projekt.
 
-## 2026-05-29 - Ungültiger Export in Server Action Datei (Next.js)
+## 001 - 2026-05-29 - Ungültiger Export in Server Action Datei (Next.js)
 
 **Betroffene Dateien / Kontext:**
 - [account.ts](file:///C:/Users/Ajwad/Documents/vs_workspace/safebook/src/lib/actions/account.ts)
