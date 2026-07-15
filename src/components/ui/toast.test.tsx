@@ -30,12 +30,12 @@ describe('Toast Component', () => {
     expect(toastElement).not.toHaveClass(styles.success)
   })
 
-  test('calls onClose after default 2000ms for success type', () => {
+  test('calls onClose after default 4000ms for success type', () => {
     vi.useFakeTimers()
     const handleClose = vi.fn()
     render(<Toast message="Success" type="success" onClose={handleClose} />)
     
-    vi.advanceTimersByTime(1999)
+    vi.advanceTimersByTime(3999)
     expect(handleClose).not.toHaveBeenCalled()
     
     vi.advanceTimersByTime(1)
@@ -91,7 +91,7 @@ describe('Toast Component', () => {
     
     unmount()
     
-    vi.advanceTimersByTime(2000)
+    vi.advanceTimersByTime(4000)
     expect(handleClose).not.toHaveBeenCalled()
     
     vi.useRealTimers()
