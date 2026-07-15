@@ -24,3 +24,19 @@ export async function findHouseholdByInviteCode(inviteCode: string) {
     .where(eq(households.inviteCode, inviteCode));
   return household;
 }
+
+export async function getHouseholdById(
+  householdId: string,
+  _deps = {
+    dbSelect: async (hid: string) => {
+      return await db
+        .select()
+        .from(households)
+        .where(eq(households.id, hid));
+    }
+  }
+) {
+  const [household] = await _deps.dbSelect(householdId);
+  return household || null;
+}
+

@@ -46,3 +46,18 @@ export async function linkAccountsToHousehold(
 ) {
   await _deps.dbUpdate(accountIds, householdId);
 }
+
+export async function getAccountsByHouseholdId(
+  householdId: string,
+  _deps = {
+    dbSelect: async (hid: string) => {
+      return await db
+        .select()
+        .from(accounts)
+        .where(eq(accounts.householdId, hid));
+    }
+  }
+) {
+  return await _deps.dbSelect(householdId);
+}
+
