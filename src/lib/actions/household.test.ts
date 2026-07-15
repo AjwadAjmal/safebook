@@ -16,7 +16,7 @@ test("createHouseholdAction should return error if validation fails", async () =
   assert.ok(result.error.includes("mindestens 2 Zeichen"));
 });
 
-test("createHouseholdAction should create household and update user and link accounts", async () => {
+test("createHouseholdAction should create household, update user, link accounts, and call signOut with redirect", async () => {
   const formData = new FormData();
   formData.append("name", "Mein Haushalt");
   formData.append("accountIds", "acc-1");
@@ -25,6 +25,8 @@ test("createHouseholdAction should create household and update user and link acc
   let householdCreated = false;
   let userUpdated = false;
   let accountsLinked = false;
+  let signOutCalled = false;
+  let signOutOptions: { redirectTo?: string } | undefined;
 
   const deps = {
     createHousehold: async (name: string) => {
@@ -42,6 +44,14 @@ test("createHouseholdAction should create household and update user and link acc
       }
     },
     getCurrentUser: async () => ({ id: "user-1", username: "testuser", role: "member", householdId: null }),
+    signOut: async (options?: { redirectTo?: string }) => {
+      signOutCalled = true;
+      signOutOptions = options;
+      // Simulate Next.js redirect behavior that is thrown by NextAuth's signOut
+      const redirectError = new Error("NEXT_REDIRECT") as Error & { digest: string };
+      redirectError.digest = `NEXT_REDIRECT;303;${options?.redirectTo || "/"};false;`;
+      throw redirectError;
+    },
   };
 
   try {
@@ -54,6 +64,9 @@ test("createHouseholdAction should create household and update user and link acc
       assert.ok(householdCreated);
       assert.ok(userUpdated);
       assert.ok(accountsLinked);
+      assert.ok(signOutCalled, "signOut should have been called");
+      assert.deepStrictEqual(signOutOptions, { redirectTo: "/login?onboardingSuccess=true" });
+      assert.ok(error.digest.includes("/login?onboardingSuccess=true"), "should redirect to login with onboardingSuccess=true");
     } else {
       throw e;
     }

@@ -41,7 +41,14 @@ _Vermeiden_: Profilerstellung, Setup
 **Haushalt** (Household):
 Zentrale Einheit für den gemeinsamen Datenraum mehrerer Nutzer.
 
+### Dashboard (Finanzübersicht)
+
+**Dashboard** (Finanzübersicht):
+Die Hauptübersicht des Haushalts für angemeldete Nutzer, die den Gesamtsaldo und alle verknüpften Konten gruppiert auflistet.
+_Vermeiden_: Landing-Page, Konten-Setup
+
 ## Beziehungen
+
 
 - Die **Profilerstellung** erzeugt ein Benutzerprofil mit initialen Konten (**Girokonto**, **Aktiendepot**, **Kasse**), welche über das **Profile-Creation-Modal** im **Local Staging** gesammelt werden.
 - Nach erfolgreicher **Profilerstellung** führt das **Haushalts-Onboarding** den Benutzer dazu, einen **Haushalt** zu erstellen oder einem beizutreten.

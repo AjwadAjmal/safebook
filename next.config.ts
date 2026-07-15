@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
 };
 
 module.exports = {
-  allowedDevOrigins: ['simulation-sheet-joseph-tip.trycloudflare.com'],
+  allowedDevOrigins: ['sublime-college-zen-capital.trycloudflare.com'],
 }
 
 export default nextConfig;

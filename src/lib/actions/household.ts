@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@/auth";
+import { auth, signOut } from "@/auth";
 import { createHouseholdSchema, joinHouseholdSchema } from "../validations/household";
 import { createHousehold, updateUserHousehold, findHouseholdByInviteCode } from "../household-utils";
 import { linkAccountsToHousehold } from "../account-db";
@@ -13,7 +13,7 @@ async function getCurrentUser() {
 
 export async function createHouseholdAction(
   formData: FormData,
-  _deps = { createHousehold, updateUserHousehold, getCurrentUser, linkAccountsToHousehold }
+  _deps = { createHousehold, updateUserHousehold, getCurrentUser, linkAccountsToHousehold, signOut }
 ) {
   const name = formData.get("name") as string;
   const accountIds = formData.getAll("accountIds") as string[];
@@ -38,7 +38,7 @@ export async function createHouseholdAction(
     return { error: "Fehler beim Erstellen des Haushalts." };
   }
 
-  redirect("/");
+  await _deps.signOut({ redirectTo: "/login?onboardingSuccess=true" });
 }
 
 export async function joinHouseholdAction(
