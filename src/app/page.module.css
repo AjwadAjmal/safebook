@@ -172,3 +172,40 @@ a.secondary:hover {
   padding-left: var(--space-1);
 }
 
+.quicklinkAction {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-accent-primary);
+  color: #ffffff;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: var(--text-base);
+  text-decoration: none;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.quicklinkAction:hover {
+  background: var(--color-accent-primary-dark);
+}
+
+.quicklinkAction:active {
+  transform: scale(0.98);
+}
+
+.quicklinkIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  line-height: 1;
+}
+
+

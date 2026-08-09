@@ -109,6 +109,9 @@ describe('Root Page (Home) - Landing vs Dashboard', () => {
     expect(screen.getByText('Gesamtsaldo')).toBeInTheDocument()
     expect(screen.getByText('2200.00 €')).toBeInTheDocument()
 
+    // Check quicklink button
+    expect(screen.getByRole('link', { name: /Neue Transaktion/i })).toBeInTheDocument()
+
     // Check account names
     expect(screen.getByText('Girokonto A')).toBeInTheDocument()
     expect(screen.getByText('Aktiendepot B')).toBeInTheDocument()

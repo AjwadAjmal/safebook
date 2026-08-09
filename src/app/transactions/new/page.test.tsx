@@ -1,0 +1,91 @@
+import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import NewTransactionPage from "./page";
+import { auth } from "@/auth";
+import { getAccountsByHouseholdId } from "@/lib/account-db";
+import { getCategoriesForHousehold, seedStandardCategories } from "@/lib/category-db";
+
+vi.mock("@/auth", () => ({
+  auth: vi.fn(),
+}));
+
+vi.mock("@/lib/account-db", () => ({
+  getAccountsByHouseholdId: vi.fn(),
+}));
+
+vi.mock("@/lib/category-db", () => ({
+  getCategoriesForHousehold: vi.fn(),
+  seedStandardCategories: vi.fn(),
+}));
+
+vi.mock("next/navigation", () => ({
+  redirect: vi.fn((url: string) => {
+    throw new Error(`NEXT_REDIRECT: ${url}`);
+  }),
+}));
+
+describe("NewTransactionPage", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("redirects to /login if user is not authenticated or has no householdId", async () => {
+    vi.mocked(auth).mockResolvedValue(null);
+
+    await expect(NewTransactionPage()).rejects.toThrow("NEXT_REDIRECT: /login");
+  });
+
+  it("redirects to /createprofile if household has no accounts", async () => {
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "u-1", householdId: "hh-1" },
+      expires: "2026-08-09",
+    });
+    vi.mocked(getAccountsByHouseholdId).mockResolvedValue([]);
+    vi.mocked(getCategoriesForHousehold).mockResolvedValue([]);
+
+    await expect(NewTransactionPage()).rejects.toThrow("NEXT_REDIRECT: /createprofile");
+  });
+
+  it("renders transaction form when user is authenticated with accounts and categories", async () => {
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "u-1", householdId: "hh-1" },
+      expires: "2026-08-09",
+    });
+
+    vi.mocked(getAccountsByHouseholdId).mockResolvedValue([
+      {
+        id: "acc-1",
+        userId: "u-1",
+        householdId: "hh-1",
+        type: "giro" as const,
+        name: "Girokonto Main",
+        institution: "Sparkasse",
+        currentValue: "1250.00",
+        investedCapital: null,
+        initialDate: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ]);
+
+    vi.mocked(getCategoriesForHousehold).mockResolvedValue([
+      {
+        id: "cat-1",
+        name: "Lebensmittel",
+        icon: "shopping-cart",
+        isSystem: true,
+        householdId: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ]);
+
+    const jsx = await NewTransactionPage();
+    render(jsx);
+
+    expect(screen.getByText("Neue Transaktion")).toBeInTheDocument();
+    expect(screen.getByText(/Girokonto Main/i)).toBeInTheDocument();
+    expect(screen.getByText("Lebensmittel")).toBeInTheDocument();
+    expect(seedStandardCategories).toHaveBeenCalled();
+  });
+});

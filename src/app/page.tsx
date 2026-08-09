@@ -67,6 +67,11 @@ export default async function Home() {
               </span>
             </div>
 
+            <Link href="/transactions/new" className={styles.quicklinkAction}>
+              <span className={styles.quicklinkIcon} aria-hidden="true">+</span>
+              Neue Transaktion
+            </Link>
+
             <main style={{ display: "flex", flexDirection: "column", gap: "var(--space-5)" }}>
               {grouped.map(group => (
                 <div key={group.type} className={styles.accountGroup}>
