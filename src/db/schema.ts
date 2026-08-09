@@ -1,7 +1,8 @@
-import { pgTable, uuid, text, timestamp, varchar, pgEnum, decimal } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, timestamp, varchar, pgEnum, decimal, boolean } from "drizzle-orm/pg-core";
 
 export const roleEnum = pgEnum("role", ["admin", "member"]);
 export const accountTypeEnum = pgEnum("account_type", ["giro", "depot", "cash"]);
+export const transactionTypeEnum = pgEnum("transaction_type", ["expense", "income"]);
 
 export const households = pgTable("households", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -34,3 +35,28 @@ export const accounts = pgTable("accounts", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+export const categories = pgTable("categories", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name", { length: 255 }).notNull(),
+  icon: varchar("icon", { length: 50 }),
+  isSystem: boolean("is_system").default(false).notNull(),
+  householdId: uuid("household_id").references(() => households.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const transactions = pgTable("transactions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  type: transactionTypeEnum("type").notNull(),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  description: varchar("description", { length: 255 }),
+  date: timestamp("date").notNull(),
+  accountId: uuid("account_id").references(() => accounts.id, { onDelete: "cascade" }).notNull(),
+  userId: uuid("user_id").references(() => users.id).notNull(),
+  householdId: uuid("household_id").references(() => households.id).notNull(),
+  categoryId: uuid("category_id").references(() => categories.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+

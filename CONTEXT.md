@@ -47,6 +47,18 @@ Zentrale Einheit für den gemeinsamen Datenraum mehrerer Nutzer.
 Die Hauptübersicht des Haushalts für angemeldete Nutzer, die den Gesamtsaldo und alle verknüpften Konten gruppiert auflistet.
 _Vermeiden_: Landing-Page, Konten-Setup
 
+### Transaktionsverwaltung (Transaction Management)
+
+**Transaktion** (Transaction / Buchung):
+Eine einzelne finanzielle Bewegung (Ausgabe oder Einnahme), die einem bestimmten Konto zugeordnet ist und dessen Kontostand (`currentValue`) direkt verändert.
+_Vermeiden_: Aktivität, Bewegung
+
+**Transaktionserfassung** (Transaction Entry):
+Der Vorgang des schnellen Erfassens einer neuen Transaktion über eine eigene Seite (z. B. `/transactions/new`), aufgerufen über den Quicklink-Button unter der Gesamtsaldo-Karte auf dem Dashboard.
+
+**Kategorie** (Category):
+Eine logische Klassifizierung einer Transaktion (z. B. "Tanken", "Lebensmittel", "Gehalt"). Das System bietet vordefinierte Standardkategorien sowie die Möglichkeit, direkt bei der Erfassung eigene haushaltsspezifische Kategorien anzulegen.
+
 ## Beziehungen
 
 

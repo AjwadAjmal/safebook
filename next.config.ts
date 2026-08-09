@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
 };
 
 module.exports = {
-  allowedDevOrigins: ['sublime-college-zen-capital.trycloudflare.com'],
+  allowedDevOrigins: ['read-removing-soa-discipline.trycloudflare.com'],
 }
 
 export default nextConfig;
