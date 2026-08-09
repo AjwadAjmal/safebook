@@ -5,7 +5,7 @@ import { getHouseholdById } from "@/lib/household-utils";
 import { getAccountsByHouseholdId } from "@/lib/account-db";
 import { getRecentTransactionsWithDetails } from "@/lib/transaction-db";
 import { getCategoriesForHousehold } from "@/lib/category-db";
-import { formatAmount, groupAccountsByType } from "@/lib/account-utils";
+import { formatAmount, groupAccountsByType, getAccountGroupLabel } from "@/lib/account-utils";
 import { AccountCard } from "@/components/auth/account-card";
 import { RecentTransactions } from "@/components/transactions/recent-transactions";
 import { Account } from "@/types/profile-creation";
@@ -39,14 +39,6 @@ export default async function Home() {
       
       const grouped = groupAccountsByType(mappedAccounts);
 
-      const getGroupHeaderLabel = (type: string) => {
-        switch (type) {
-          case "giro": return "Girokonten";
-          case "depot": return "Aktiendepots";
-          case "cash": return "Kasse / Bargeld";
-          default: return type;
-        }
-      };
 
       return (
         <div className="pageContainer" style={{ paddingTop: "var(--space-6)" }}>
@@ -81,7 +73,7 @@ export default async function Home() {
               {grouped.map(group => (
                 <div key={group.type} className={styles.accountGroup}>
                   <h2 className={styles.groupHeader}>
-                    {getGroupHeaderLabel(group.type)}
+                    {getAccountGroupLabel(group.type)}
                   </h2>
                   {group.accounts.map(acc => (
                     <AccountCard key={acc.id} account={acc} />

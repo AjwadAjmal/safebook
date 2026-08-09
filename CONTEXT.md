@@ -47,6 +47,21 @@ Zentrale Einheit für den gemeinsamen Datenraum mehrerer Nutzer.
 Die Hauptübersicht des Haushalts für angemeldete Nutzer, die den Gesamtsaldo und alle verknüpften Konten gruppiert auflistet.
 _Vermeiden_: Landing-Page, Konten-Setup
 
+### Navigation
+
+**Sidebar-Navigation** (Navigation Drawer):
+Ein seitliches Overlay-Menü (Drawer), das über ein Menü-Icon in der Kopfzeile geöffnet wird und die primären Verlinkungen der Anwendung bereitstellt.
+_Vermeiden_: Bottom Navigation, Tab-Bar
+
+### Kontenverwaltung (Account Management)
+
+**Konten-Seite** (Accounts Page / `/accounts`):
+Eine eigenständige Seite zur Anzeige aller verknüpften Konten des Haushalts, gruppiert nach Kontotypen (Girokonten, Aktiendepots, Kasse).
+_Vermeiden_: Konten-Setup, Profile Creation
+
+**Gruppensumme** (Group Subtotal):
+Die aufsummierte Gesamtsumme der Salden aller Konten innerhalb einer Kontogruppe (z. B. Summe aller Girokonten).
+
 ### Transaktionsverwaltung (Transaction Management)
 
 **Transaktion** (Transaction / Buchung):
