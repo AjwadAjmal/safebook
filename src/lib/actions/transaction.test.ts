@@ -1,6 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert";
-import { createTransactionAction, createCustomCategoryAction } from "./transaction";
+import {
+  createTransactionAction,
+  createCustomCategoryAction,
+  deleteTransactionAction,
+  updateTransactionAction,
+} from "./transaction";
+
+
 
 test("createTransactionAction should return error if user is not authenticated", async () => {
   const result = await createTransactionAction(
@@ -124,3 +131,67 @@ test("createCustomCategoryAction should create custom category and return create
   assert.strictEqual(result.category.name, "Geschenke");
   assert.strictEqual(categoryInput?.householdId, "hh-1");
 });
+
+test("deleteTransactionAction should return error if unauthenticated", async () => {
+  const result = await deleteTransactionAction(
+    "tx-1",
+    {
+      getCurrentUser: async () => null,
+      deleteTx: async () => {},
+    }
+  );
+
+  assert.ok(result?.error);
+  assert.ok(result.error.includes("Nicht autorisiert"));
+});
+
+test("deleteTransactionAction should invoke deleteTransactionWithBalanceRollback on valid auth", async () => {
+  let deletedInfo: { txId: string; hid: string } | null = null;
+  const result = await deleteTransactionAction(
+    "tx-100",
+    {
+      getCurrentUser: async () => ({ id: "user-1", householdId: "hh-1" }),
+      deleteTx: async (txId: string, hid: string) => {
+        deletedInfo = { txId, hid };
+      },
+    }
+  );
+
+  assert.strictEqual(result?.success, true);
+  assert.strictEqual(deletedInfo?.txId, "tx-100");
+  assert.strictEqual(deletedInfo?.hid, "hh-1");
+});
+
+test("updateTransactionAction should return error if unauthenticated", async () => {
+  const result = await updateTransactionAction(
+    "tx-1",
+    { amount: "50.00" },
+    {
+      getCurrentUser: async () => null,
+      updateTx: async () => ({ id: "tx-1" }),
+    }
+  );
+
+  assert.ok(result?.error);
+  assert.ok(result.error.includes("Nicht autorisiert"));
+});
+
+test("updateTransactionAction should update transaction and return updated record", async () => {
+  let updatedPayload: Record<string, unknown> | null = null;
+  const result = await updateTransactionAction(
+    "tx-100",
+    { amount: "75,50", description: "Neuer Einkauf" },
+    {
+      getCurrentUser: async () => ({ id: "user-1", householdId: "hh-1" }),
+      updateTx: async (txId: string, hid: string, data: Record<string, unknown>) => {
+        updatedPayload = data;
+        return { id: txId, ...data };
+      },
+    }
+  );
+
+  assert.strictEqual(result?.success, true);
+  assert.strictEqual(updatedPayload?.amount, "75.5");
+  assert.strictEqual(updatedPayload?.description, "Neuer Einkauf");
+});
+

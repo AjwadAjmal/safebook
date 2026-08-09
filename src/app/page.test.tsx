@@ -4,6 +4,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { auth } from '@/auth'
 import { getHouseholdById } from '@/lib/household-utils'
 import { getAccountsByHouseholdId } from '@/lib/account-db'
+import { getRecentTransactionsWithDetails } from '@/lib/transaction-db'
+import { getCategoriesForHousehold } from '@/lib/category-db'
 
 vi.mock('@/auth', () => ({
   auth: vi.fn(),
@@ -17,6 +19,15 @@ vi.mock('@/lib/household-utils', () => ({
 vi.mock('@/lib/account-db', () => ({
   getAccountsByHouseholdId: vi.fn(),
 }))
+
+vi.mock('@/lib/transaction-db', () => ({
+  getRecentTransactionsWithDetails: vi.fn(),
+}))
+
+vi.mock('@/lib/category-db', () => ({
+  getCategoriesForHousehold: vi.fn(),
+}))
+
 
 describe('Root Page (Home) - Landing vs Dashboard', () => {
   beforeEach(() => {
@@ -97,6 +108,8 @@ describe('Root Page (Home) - Landing vs Dashboard', () => {
       },
     ]
     vi.mocked(getAccountsByHouseholdId).mockResolvedValue(mockAccounts)
+    vi.mocked(getRecentTransactionsWithDetails).mockResolvedValue([])
+    vi.mocked(getCategoriesForHousehold).mockResolvedValue([])
 
     const jsx = await Home()
     render(jsx)
@@ -116,5 +129,9 @@ describe('Root Page (Home) - Landing vs Dashboard', () => {
     expect(screen.getByText('Girokonto A')).toBeInTheDocument()
     expect(screen.getByText('Aktiendepot B')).toBeInTheDocument()
     expect(screen.getByText('Bargeld C')).toBeInTheDocument()
+
+    // Check recent transactions section
+    expect(screen.getByText('Letzte Transaktionen')).toBeInTheDocument()
   })
 })
+

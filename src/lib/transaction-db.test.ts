@@ -5,6 +5,7 @@ import {
   deleteTransactionWithBalanceRollback,
   updateTransactionWithBalanceAdjustment,
   getTransactionsByHouseholdId,
+  getRecentTransactionsWithDetails,
   CreateTransactionInput,
   UpdateTransactionInput,
 } from "./transaction-db";
@@ -183,4 +184,34 @@ test("getTransactionsByHouseholdId should return household transactions", async 
   const result = await getTransactionsByHouseholdId("hh-1", 10, deps as never);
   assert.deepStrictEqual(result, mockList);
 });
+
+test("getRecentTransactionsWithDetails should return transactions mapped with account and category names", async () => {
+  const mockRows = [
+    {
+      id: "tx-101",
+      type: "expense" as const,
+      amount: "45.00",
+      description: "Supermarkt",
+      date: new Date("2026-08-09"),
+      accountId: "acc-1",
+      accountName: "Girokonto",
+      categoryId: "cat-1",
+      categoryName: "Lebensmittel",
+      categoryIcon: "shopping-cart",
+    },
+  ];
+
+  const deps = {
+    dbSelectRecent: async (hid: string, lim: number) => {
+      if (hid === "hh-1" && lim === 5) return mockRows;
+      return [];
+    },
+  };
+
+  const result = await getRecentTransactionsWithDetails("hh-1", 5, deps);
+  assert.strictEqual(result.length, 1);
+  assert.strictEqual(result[0].accountName, "Girokonto");
+  assert.strictEqual(result[0].categoryName, "Lebensmittel");
+});
+
 

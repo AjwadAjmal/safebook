@@ -6,11 +6,15 @@ import { auth } from "@/auth";
 import {
   createTransactionSchema,
   createCustomCategorySchema,
+  updateTransactionSchema,
   parseDecimalString,
 } from "@/lib/validations/transaction";
 import {
   createTransactionWithBalanceUpdate,
+  deleteTransactionWithBalanceRollback,
+  updateTransactionWithBalanceAdjustment,
   CreateTransactionInput,
+  UpdateTransactionInput,
 } from "@/lib/transaction-db";
 import { createCustomCategory } from "@/lib/category-db";
 
@@ -22,6 +26,9 @@ export interface CreateTransactionFormInput {
   accountId: string;
   categoryId: string;
 }
+
+export type UpdateTransactionFormInput = Partial<CreateTransactionFormInput>;
+
 
 export interface CreateCustomCategoryFormInput {
   name: string;
@@ -134,3 +141,88 @@ export async function createCustomCategoryAction(
     return { error: "Fehler beim Erstellen der Kategorie." };
   }
 }
+
+export async function deleteTransactionAction(
+  transactionId: string,
+  deps = {
+    getCurrentUser: async () => {
+      const session = await auth();
+      return session?.user;
+    },
+    deleteTx: async (txId: string, hid: string) => {
+      await deleteTransactionWithBalanceRollback(txId, hid);
+    },
+  }
+) {
+  const user = await deps.getCurrentUser();
+  if (!user || !user.id || !user.householdId) {
+    return { error: "Nicht autorisiert." };
+  }
+
+  try {
+    await deps.deleteTx(transactionId, user.householdId);
+    try {
+      revalidatePath("/");
+    } catch {
+      // Ignore in test env
+    }
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to delete transaction:", error);
+    return { error: "Fehler beim Löschen der Transaktion." };
+  }
+}
+
+export async function updateTransactionAction(
+  transactionId: string,
+  input: UpdateTransactionFormInput,
+  deps = {
+    getCurrentUser: async () => {
+      const session = await auth();
+      return session?.user;
+    },
+    updateTx: async (txId: string, hid: string, data: UpdateTransactionInput) => {
+      return await updateTransactionWithBalanceAdjustment(txId, hid, data);
+    },
+  }
+) {
+  const user = await deps.getCurrentUser();
+  if (!user || !user.id || !user.householdId) {
+    return { error: "Nicht autorisiert." };
+  }
+
+  const validationResult = updateTransactionSchema.safeParse(input);
+  if (!validationResult.success) {
+    return {
+      error: validationResult.error.issues[0]?.message || "Ungültige Eingabe.",
+    };
+  }
+
+  const updatePayload: UpdateTransactionInput = {};
+  if (input.type) updatePayload.type = input.type;
+  if (input.amount !== undefined && input.amount !== "") {
+    const normalizedAmount = parseDecimalString(input.amount);
+    if (!normalizedAmount) {
+      return { error: "Betrag muss eine gültige Zahl sein." };
+    }
+    updatePayload.amount = normalizedAmount;
+  }
+  if (input.description !== undefined) updatePayload.description = input.description;
+  if (input.date) updatePayload.date = new Date(input.date);
+  if (input.accountId) updatePayload.accountId = input.accountId;
+  if (input.categoryId) updatePayload.categoryId = input.categoryId;
+
+  try {
+    const updated = await deps.updateTx(transactionId, user.householdId, updatePayload);
+    try {
+      revalidatePath("/");
+    } catch {
+      // Ignore in test env
+    }
+    return { success: true, transaction: updated };
+  } catch (error) {
+    console.error("Failed to update transaction:", error);
+    return { error: "Fehler beim Aktualisieren der Transaktion." };
+  }
+}
+

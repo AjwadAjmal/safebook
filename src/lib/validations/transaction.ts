@@ -32,3 +32,19 @@ export const createCustomCategorySchema = z.object({
 });
 
 export type CreateCustomCategorySchemaInput = z.infer<typeof createCustomCategorySchema>;
+
+export const updateTransactionSchema = z.object({
+  type: z.enum(["expense", "income"]).optional(),
+  amount: z.string().refine((val) => {
+    if (!val) return true;
+    const parsed = parseDecimalString(val);
+    return parsed !== null && Number(parsed) > 0;
+  }, { message: "Betrag muss größer als 0 sein" }).optional(),
+  description: z.string().optional().nullable(),
+  date: z.string().optional(),
+  accountId: z.string().optional(),
+  categoryId: z.string().optional(),
+});
+
+export type UpdateTransactionSchemaInput = z.infer<typeof updateTransactionSchema>;
+

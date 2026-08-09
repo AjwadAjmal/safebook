@@ -3,8 +3,11 @@ import styles from "./page.module.css";
 import { auth, signOut } from "@/auth";
 import { getHouseholdById } from "@/lib/household-utils";
 import { getAccountsByHouseholdId } from "@/lib/account-db";
+import { getRecentTransactionsWithDetails } from "@/lib/transaction-db";
+import { getCategoriesForHousehold } from "@/lib/category-db";
 import { formatAmount, groupAccountsByType } from "@/lib/account-utils";
 import { AccountCard } from "@/components/auth/account-card";
+import { RecentTransactions } from "@/components/transactions/recent-transactions";
 import { Account } from "@/types/profile-creation";
 
 export default async function Home() {
@@ -16,6 +19,8 @@ export default async function Home() {
     
     if (household) {
       const dbAccounts = await getAccountsByHouseholdId(householdId);
+      const recentTransactions = await getRecentTransactionsWithDetails(householdId, 5);
+      const dbCategories = await getCategoriesForHousehold(householdId);
       
       const mappedAccounts: Account[] = dbAccounts.map(acc => ({
         id: acc.id,
@@ -83,6 +88,12 @@ export default async function Home() {
                   ))}
                 </div>
               ))}
+
+              <RecentTransactions
+                transactions={recentTransactions}
+                accounts={mappedAccounts}
+                categories={dbCategories}
+              />
             </main>
           </div>
         </div>

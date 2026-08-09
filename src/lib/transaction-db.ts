@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { accounts, transactions } from "@/db/schema";
+import { accounts, categories, transactions } from "@/db/schema";
 import { and, desc, eq } from "drizzle-orm";
 import {
   calculateNewBalance,
@@ -207,3 +207,48 @@ export async function getTransactionsByHouseholdId(
 ) {
   return await _deps.dbSelect(householdId, limit);
 }
+
+export interface TransactionWithDetails {
+  id: string;
+  type: "expense" | "income";
+  amount: string;
+  description: string | null;
+  date: Date;
+  accountId: string;
+  accountName: string;
+  categoryId: string;
+  categoryName: string;
+  categoryIcon: string | null;
+}
+
+export async function getRecentTransactionsWithDetails(
+  householdId: string,
+  limit: number = 5,
+  _deps = {
+    dbSelectRecent: async (hid: string, lim: number) => {
+      const rows = await db
+        .select({
+          id: transactions.id,
+          type: transactions.type,
+          amount: transactions.amount,
+          description: transactions.description,
+          date: transactions.date,
+          accountId: transactions.accountId,
+          accountName: accounts.name,
+          categoryId: transactions.categoryId,
+          categoryName: categories.name,
+          categoryIcon: categories.icon,
+        })
+        .from(transactions)
+        .innerJoin(accounts, eq(transactions.accountId, accounts.id))
+        .innerJoin(categories, eq(transactions.categoryId, categories.id))
+        .where(eq(transactions.householdId, hid))
+        .orderBy(desc(transactions.date))
+        .limit(lim);
+      return rows;
+    },
+  }
+) {
+  return await _deps.dbSelectRecent(householdId, limit);
+}
+
