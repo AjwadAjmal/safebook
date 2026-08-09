@@ -5,8 +5,8 @@ import { getHouseholdById } from "@/lib/household-utils";
 import { getAccountsByHouseholdId } from "@/lib/account-db";
 import { getRecentTransactionsWithDetails } from "@/lib/transaction-db";
 import { getCategoriesForHousehold } from "@/lib/category-db";
-import { formatAmount, groupAccountsByType, getAccountGroupLabel } from "@/lib/account-utils";
-import { AccountCard } from "@/components/auth/account-card";
+import { formatAmount } from "@/lib/account-utils";
+import { SidebarNavigation } from "@/components/navigation/sidebar-navigation";
 import { RecentTransactions } from "@/components/transactions/recent-transactions";
 import { Account } from "@/types/profile-creation";
 
@@ -36,59 +36,45 @@ export default async function Home() {
 
       const totalBalance = dbAccounts.reduce((sum, acc) => sum + Number(acc.currentValue), 0);
       const formattedTotalBalance = formatAmount(totalBalance);
-      
-      const grouped = groupAccountsByType(mappedAccounts);
 
+      const handleLogout = async () => {
+        "use server";
+        await signOut({ redirectTo: "/login" });
+      };
 
       return (
-        <div className="pageContainer" style={{ paddingTop: "var(--space-6)" }}>
-          <div className={styles.dashboard}>
-            <header className={styles.dashboardHeader}>
-              <span className={styles.householdName}>{household.name}</span>
-              <form
-                action={async () => {
-                  "use server";
-                  await signOut({ redirectTo: "/login" });
-                }}
-              >
-                <button type="submit" className={styles.logoutButton}>
-                  Abmelden
-                </button>
-              </form>
-            </header>
-
-            <div className={styles.saldoCard}>
-              <span className={styles.saldoLabel}>Gesamtsaldo</span>
-              <span className={`${styles.saldoValue} tabular-nums`}>
-                {formattedTotalBalance} €
-              </span>
-            </div>
-
-            <Link href="/transactions/new" className={styles.quicklinkAction}>
-              <span className={styles.quicklinkIcon} aria-hidden="true">+</span>
-              Neue Transaktion
-            </Link>
-
-            <main style={{ display: "flex", flexDirection: "column", gap: "var(--space-5)" }}>
-              {grouped.map(group => (
-                <div key={group.type} className={styles.accountGroup}>
-                  <h2 className={styles.groupHeader}>
-                    {getAccountGroupLabel(group.type)}
-                  </h2>
-                  {group.accounts.map(acc => (
-                    <AccountCard key={acc.id} account={acc} />
-                  ))}
+        <>
+          <SidebarNavigation
+            householdName={household.name}
+            logoutAction={handleLogout}
+          />
+          <div className="pageContainer" style={{ paddingTop: "var(--space-6)" }}>
+            <div className={styles.dashboard}>
+              <Link href="/accounts" className={styles.saldoCard}>
+                <div className={styles.saldoContent}>
+                  <span className={styles.saldoLabel}>Gesamtsaldo</span>
+                  <span className={`${styles.saldoValue} tabular-nums`}>
+                    {formattedTotalBalance} €
+                  </span>
                 </div>
-              ))}
+                <span className={styles.saldoChevron} aria-hidden="true">›</span>
+              </Link>
 
-              <RecentTransactions
-                transactions={recentTransactions}
-                accounts={mappedAccounts}
-                categories={dbCategories}
-              />
-            </main>
+              <Link href="/transactions/new" className={styles.quicklinkAction}>
+                <span className={styles.quicklinkIcon} aria-hidden="true">+</span>
+                Neue Transaktion
+              </Link>
+
+              <main style={{ display: "flex", flexDirection: "column", gap: "var(--space-5)" }}>
+                <RecentTransactions
+                  transactions={recentTransactions}
+                  accounts={mappedAccounts}
+                  categories={dbCategories}
+                />
+              </main>
+            </div>
           </div>
-        </div>
+        </>
       );
     }
   }

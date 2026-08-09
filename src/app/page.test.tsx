@@ -12,6 +12,11 @@ vi.mock('@/auth', () => ({
   signOut: vi.fn(),
 }))
 
+vi.mock('next/navigation', () => ({
+  redirect: vi.fn(),
+  usePathname: vi.fn(() => '/'),
+}))
+
 vi.mock('@/lib/household-utils', () => ({
   getHouseholdById: vi.fn(),
 }))
@@ -114,23 +119,25 @@ describe('Root Page (Home) - Landing vs Dashboard', () => {
     const jsx = await Home()
     render(jsx)
 
-    // Check header
-    expect(screen.getByText('Haushalt Schmidt')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Abmelden' })).toBeInTheDocument()
+    // Check header / SidebarNavigation integration
+    expect(screen.getAllByText('Haushalt Schmidt').length).toBeGreaterThan(0)
+    expect(screen.getByRole('button', { name: 'Menü öffnen' })).toBeInTheDocument()
 
-    // Check Gesamtsaldo (1500 + 500 + 200 = 2200.00)
-    expect(screen.getByText('Gesamtsaldo')).toBeInTheDocument()
-    expect(screen.getByText('2200.00 €')).toBeInTheDocument()
+    // Check Gesamtsaldo (1500 + 500 + 200 = 2200.00) wrapped in a Link to /accounts with chevron
+    const saldoCardLink = screen.getByRole('link', { name: /Gesamtsaldo/i })
+    expect(saldoCardLink).toHaveAttribute('href', '/accounts')
+    expect(saldoCardLink).toHaveTextContent('2200.00 €')
+    expect(saldoCardLink).toHaveTextContent('›')
 
     // Check quicklink button
-    expect(screen.getByRole('link', { name: /Neue Transaktion/i })).toBeInTheDocument()
+    expect(screen.getAllByRole('link', { name: /Neue Transaktion/i }).length).toBeGreaterThan(0)
 
-    // Check account names
-    expect(screen.getByText('Girokonto A')).toBeInTheDocument()
-    expect(screen.getByText('Aktiendepot B')).toBeInTheDocument()
-    expect(screen.getByText('Bargeld C')).toBeInTheDocument()
+    // Check account cards are NO LONGER rendered on dashboard main view
+    expect(screen.queryByText('Girokonto A')).not.toBeInTheDocument()
+    expect(screen.queryByText('Aktiendepot B')).not.toBeInTheDocument()
+    expect(screen.queryByText('Bargeld C')).not.toBeInTheDocument()
 
-    // Check recent transactions section
+    // Check recent transactions section is still rendered
     expect(screen.getByText('Letzte Transaktionen')).toBeInTheDocument()
   })
 })
