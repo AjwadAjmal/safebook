@@ -5,9 +5,10 @@ import Link from "next/link";
 import styles from "./transaction-form.module.css";
 import {
   createTransactionAction,
-  createCustomCategoryAction,
 } from "@/lib/actions/transaction";
 import { isValidDecimalInput } from "@/lib/account-utils";
+
+import { CategoryModal } from "./category-modal";
 
 export interface AccountOption {
   id: string;
@@ -38,49 +39,12 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
   const [date, setDate] = useState<string>(() => new Date().toISOString().split("T")[0]);
   const [categoryId, setCategoryId] = useState<string>(categories[0]?.id || "");
 
-  // Inline custom category state
-  const [showInlineCategory, setShowInlineCategory] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState("");
-  const [inlineCategoryError, setInlineCategoryError] = useState<string | null>(null);
-  const [isSavingCategory, setIsSavingCategory] = useState(false);
+  // Category Modal state
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
 
   // Form submit state
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleCreateInlineCategory = async () => {
-    if (!newCategoryName.trim() || newCategoryName.trim().length < 2) {
-      setInlineCategoryError("Kategoriename muss mindestens 2 Zeichen lang sein");
-      return;
-    }
-
-    setInlineCategoryError(null);
-    setIsSavingCategory(true);
-
-    try {
-      const res = await createCustomCategoryAction({ name: newCategoryName.trim() });
-      if ("error" in res && res.error) {
-        setInlineCategoryError(res.error);
-      } else if ("category" in res && res.category) {
-        const newCat: CategoryOption = {
-          id: res.category.id,
-          name: res.category.name,
-          icon: res.category.icon || "tag",
-          isSystem: false,
-          householdId: res.category.householdId,
-        };
-        setCategories((prev) => [...prev, newCat]);
-        setCategoryId(newCat.id);
-        setNewCategoryName("");
-        setShowInlineCategory(false);
-      }
-    } catch (err) {
-      console.error(err);
-      setInlineCategoryError("Fehler beim Erstellen der Kategorie.");
-    } finally {
-      setIsSavingCategory(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,6 +93,7 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
   };
 
   return (
+    <>
     <form className={styles.formContainer} onSubmit={handleSubmit}>
       <div className={styles.header}>
         <h1 className={styles.title}>Neue Transaktion</h1>
@@ -223,15 +188,13 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
           <label htmlFor="categoryId" className={styles.label}>
             Kategorie
           </label>
-          {!showInlineCategory && (
-            <button
-              type="button"
-              className={styles.inlineCategoryBtn}
-              onClick={() => setShowInlineCategory(true)}
-            >
-              + Neue Kategorie
-            </button>
-          )}
+          <button
+            type="button"
+            className={styles.inlineCategoryBtn}
+            onClick={() => setIsCategoryModalOpen(true)}
+          >
+            + Neue Kategorie
+          </button>
         </div>
 
         <select
@@ -246,40 +209,6 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
             </option>
           ))}
         </select>
-
-        {showInlineCategory && (
-          <div className={styles.inlineCategoryBox}>
-            <input
-              type="text"
-              placeholder="Kategoriename (z. B. Hobbies)"
-              className={styles.inlineCategoryInput}
-              value={newCategoryName}
-              onChange={(e) => setNewCategoryName(e.target.value)}
-            />
-            <button
-              type="button"
-              className={styles.inlineCategorySaveBtn}
-              onClick={handleCreateInlineCategory}
-              disabled={isSavingCategory}
-            >
-              Speichern
-            </button>
-            <button
-              type="button"
-              className={styles.inlineCategoryCancelBtn}
-              onClick={() => {
-                setShowInlineCategory(false);
-                setInlineCategoryError(null);
-                setNewCategoryName("");
-              }}
-            >
-              ✕
-            </button>
-          </div>
-        )}
-        {inlineCategoryError && (
-          <div className={styles.errorMessage}>{inlineCategoryError}</div>
-        )}
       </div>
 
       {/* Description */}
@@ -306,5 +235,15 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
         {isSubmitting ? "Wird gespeichert..." : "Transaktion speichern"}
       </button>
     </form>
+
+    <CategoryModal
+      isOpen={isCategoryModalOpen}
+      onClose={() => setIsCategoryModalOpen(false)}
+      onSuccess={(newCat) => {
+        setCategories((prev) => [...prev, newCat]);
+        setCategoryId(newCat.id);
+      }}
+    />
+    </>
   );
 }

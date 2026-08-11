@@ -42,33 +42,102 @@ describe("TransactionForm", () => {
     expect(incomeBtn.className).toContain("typeButtonIncomeActive");
   });
 
-  it("allows inline custom category creation", async () => {
+  it("opens CategoryModal with name input, emoji icon grid, Abbrechen and Speichern buttons", () => {
+    render(<TransactionForm accounts={mockAccounts} categories={mockCategories} />);
+
+    const addCatBtn = screen.getByRole("button", { name: "+ Neue Kategorie" });
+    fireEvent.click(addCatBtn);
+
+    expect(screen.getByText("Kategorie erstellen")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Kategoriename (z. B. Hobbies)")).toBeInTheDocument();
+    expect(screen.getByText("Icon auswählen")).toBeInTheDocument();
+    expect(screen.getByText("🏷️")).toBeInTheDocument();
+    expect(screen.getByText("🛒")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Abbrechen" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Speichern" })).toBeInTheDocument();
+  });
+
+  it("allows selecting an icon from the curated icon grid", () => {
+    render(<TransactionForm accounts={mockAccounts} categories={mockCategories} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "+ Neue Kategorie" }));
+
+    const tagBtn = screen.getByRole("button", { name: "🏷️" });
+    const cartBtn = screen.getByRole("button", { name: "🛒" });
+
+    expect(tagBtn.className).toContain("iconTileSelected");
+    expect(cartBtn.className).not.toContain("iconTileSelected");
+
+    fireEvent.click(cartBtn);
+
+    expect(cartBtn.className).toContain("iconTileSelected");
+    expect(tagBtn.className).not.toContain("iconTileSelected");
+  });
+
+  it("closes modal without saving when Abbrechen is clicked", () => {
+    render(<TransactionForm accounts={mockAccounts} categories={mockCategories} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "+ Neue Kategorie" }));
+
+    const categoryInput = screen.getByPlaceholderText("Kategoriename (z. B. Hobbies)");
+    fireEvent.change(categoryInput, { target: { value: "Fitness" } });
+
+    const cancelBtn = screen.getByRole("button", { name: "Abbrechen" });
+    fireEvent.click(cancelBtn);
+
+    expect(screen.queryByText("Kategorie erstellen")).not.toBeInTheDocument();
+    expect(createCustomCategoryAction).not.toHaveBeenCalled();
+  });
+
+  it("shows validation error if category name is less than 2 characters", async () => {
+    render(<TransactionForm accounts={mockAccounts} categories={mockCategories} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "+ Neue Kategorie" }));
+
+    const categoryInput = screen.getByPlaceholderText("Kategoriename (z. B. Hobbies)");
+    fireEvent.change(categoryInput, { target: { value: "A" } });
+
+    const saveBtn = screen.getByRole("button", { name: "Speichern" });
+    fireEvent.click(saveBtn);
+
+    expect(await screen.findByText("Kategoriename muss mindestens 2 Zeichen lang sein")).toBeInTheDocument();
+    expect(createCustomCategoryAction).not.toHaveBeenCalled();
+    expect(screen.getByText("Kategorie erstellen")).toBeInTheDocument();
+  });
+
+  it("submits category with name and icon, auto-selects it and closes modal", async () => {
     vi.mocked(createCustomCategoryAction).mockResolvedValue({
-      category: { id: "cat-3", name: "Hobby", icon: "tag", isSystem: false, householdId: "hh-1" },
+      category: { id: "cat-3", name: "Fitness", icon: "sports", isSystem: false, householdId: "hh-1" },
     });
 
     render(<TransactionForm accounts={mockAccounts} categories={mockCategories} />);
 
-    // Click "+ Neue Kategorie"
-    const addCatBtn = screen.getByRole("button", { name: "+ Neue Kategorie" });
-    fireEvent.click(addCatBtn);
+    fireEvent.click(screen.getByRole("button", { name: "+ Neue Kategorie" }));
 
-    // Expect inline category input field
     const categoryInput = screen.getByPlaceholderText("Kategoriename (z. B. Hobbies)");
-    expect(categoryInput).toBeInTheDocument();
+    fireEvent.change(categoryInput, { target: { value: "Fitness" } });
 
-    fireEvent.change(categoryInput, { target: { value: "Hobby" } });
+    // Select sports icon ⚽
+    const sportsIconBtn = screen.getByRole("button", { name: "⚽" });
+    fireEvent.click(sportsIconBtn);
 
-    const saveCatBtn = screen.getByRole("button", { name: "Speichern" });
-    fireEvent.click(saveCatBtn);
+    const saveBtn = screen.getByRole("button", { name: "Speichern" });
+    fireEvent.click(saveBtn);
 
     await waitFor(() => {
-      expect(createCustomCategoryAction).toHaveBeenCalledWith({ name: "Hobby" });
+      expect(createCustomCategoryAction).toHaveBeenCalledWith({
+        name: "Fitness",
+        icon: "sports",
+      });
     });
 
-    // Category should be added to select box and selected
+    // Modal should close
+    expect(screen.queryByText("Kategorie erstellen")).not.toBeInTheDocument();
+
+    // Category should be added to select box and auto-selected
     const categorySelect = screen.getByLabelText("Kategorie") as HTMLSelectElement;
     expect(categorySelect.value).toBe("cat-3");
+    expect(screen.getByRole("option", { name: "Fitness" })).toBeInTheDocument();
   });
 
   it("submits the form data via createTransactionAction", async () => {
