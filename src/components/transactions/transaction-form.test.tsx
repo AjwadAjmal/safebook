@@ -97,4 +97,19 @@ describe("TransactionForm", () => {
       );
     });
   });
+
+  it("prevents entering more than 2 decimal places in amount input", () => {
+    render(<TransactionForm accounts={mockAccounts} categories={mockCategories} />);
+
+    const amountInput = screen.getByLabelText("Betrag (€)") as HTMLInputElement;
+
+    fireEvent.change(amountInput, { target: { value: "10,5" } });
+    expect(amountInput.value).toBe("10,5");
+
+    fireEvent.change(amountInput, { target: { value: "10,55" } });
+    expect(amountInput.value).toBe("10,55");
+
+    fireEvent.change(amountInput, { target: { value: "10,555" } });
+    expect(amountInput.value).toBe("10,55");
+  });
 });

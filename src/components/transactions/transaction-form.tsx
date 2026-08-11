@@ -7,6 +7,7 @@ import {
   createTransactionAction,
   createCustomCategoryAction,
 } from "@/lib/actions/transaction";
+import { isValidDecimalInput } from "@/lib/account-utils";
 
 export interface AccountOption {
   id: string;
@@ -191,7 +192,12 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
           placeholder="0,00"
           className={`${styles.input} tabular-nums`}
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          onChange={(e) => {
+            const val = e.target.value;
+            if (isValidDecimalInput(val)) {
+              setAmount(val);
+            }
+          }}
           required
         />
       </div>

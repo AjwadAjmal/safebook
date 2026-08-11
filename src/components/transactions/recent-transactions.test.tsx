@@ -125,4 +125,28 @@ describe("RecentTransactions", () => {
       );
     });
   });
+
+  it("prevents entering more than 2 decimal places in edit amount input", () => {
+    render(
+      <RecentTransactions
+        transactions={mockTransactions}
+        accounts={mockAccounts}
+        categories={mockCategories}
+      />
+    );
+
+    const editButtons = screen.getAllByRole("button", { name: "Bearbeiten" });
+    fireEvent.click(editButtons[0]);
+
+    const amountInput = screen.getByLabelText("Betrag (€)") as HTMLInputElement;
+
+    fireEvent.change(amountInput, { target: { value: "50,5" } });
+    expect(amountInput.value).toBe("50,5");
+
+    fireEvent.change(amountInput, { target: { value: "50,55" } });
+    expect(amountInput.value).toBe("50,55");
+
+    fireEvent.change(amountInput, { target: { value: "50,555" } });
+    expect(amountInput.value).toBe("50,55");
+  });
 });

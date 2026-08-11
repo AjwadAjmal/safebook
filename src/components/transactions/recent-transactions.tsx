@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import styles from "./recent-transactions.module.css";
-import { formatAmount } from "@/lib/account-utils";
+import { formatAmount, isValidDecimalInput } from "@/lib/account-utils";
 import {
   deleteTransactionAction,
   updateTransactionAction,
@@ -263,9 +263,12 @@ export function RecentTransactions({
                   inputMode="decimal"
                   className={`${styles.input} tabular-nums`}
                   value={editForm.amount || ""}
-                  onChange={(e) =>
-                    setEditForm((prev) => ({ ...prev, amount: e.target.value }))
-                  }
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (isValidDecimalInput(val)) {
+                      setEditForm((prev) => ({ ...prev, amount: val }));
+                    }
+                  }}
                   required
                 />
               </div>
