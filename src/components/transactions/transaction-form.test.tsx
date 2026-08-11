@@ -177,5 +177,143 @@ describe("TransactionForm (Multi-Step Wizard - Slice 2)", () => {
     const nextBtn = screen.getByRole("button", { name: "Weiter" }) as HTMLButtonElement;
     expect(nextBtn).not.toBeDisabled();
   });
+
+  it("renders Step 4 Summary Card displaying selected Account, Amount/Type, Date/Category, and Edit buttons (✏️)", () => {
+    render(<TransactionForm accounts={mockAccounts} categories={mockCategories} />);
+
+    // Step 1: Select Girokonto
+    fireEvent.click(screen.getAllByText("Girokonto")[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    // Step 2: Enter amount 2500 (25,00 €)
+    const amountInput = screen.getByTestId("cent-amount-input");
+    fireEvent.change(amountInput, { target: { value: "2500" } });
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    // Step 3: Select category Lebensmittel
+    fireEvent.click(screen.getByRole("button", { name: /Lebensmittel/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    // Step 4
+    expect(screen.getByText("Schritt 4 von 4")).toBeInTheDocument();
+    expect(screen.getByText("Zusammenfassung")).toBeInTheDocument();
+
+    expect(screen.getByText("Girokonto")).toBeInTheDocument();
+    expect(screen.getByText(/25,00 € \(Ausgabe\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Lebensmittel/i)).toBeInTheDocument();
+
+    expect(screen.getByRole("button", { name: /konto bearbeiten/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /betrag bearbeiten/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /kategorie bearbeiten/i })).toBeInTheDocument();
+    expect(screen.getByLabelText("Beschreibung (optional)")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Transaktion speichern" })).toBeInTheDocument();
+  });
+
+  it("allows jumping directly back to Step 1, Step 2, or Step 3 via edit buttons (✏️) on Summary Card", () => {
+    render(<TransactionForm accounts={mockAccounts} categories={mockCategories} />);
+
+    // Step 1 -> Step 2 -> Step 3 -> Step 4
+    fireEvent.click(screen.getAllByText("Girokonto")[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    const amountInput = screen.getByTestId("cent-amount-input");
+    fireEvent.change(amountInput, { target: { value: "1000" } });
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    fireEvent.click(screen.getByRole("button", { name: /Lebensmittel/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    // Currently at Step 4
+    expect(screen.getByText("Schritt 4 von 4")).toBeInTheDocument();
+
+    // Click "Konto bearbeiten" -> Jump to Step 1
+    fireEvent.click(screen.getByRole("button", { name: /konto bearbeiten/i }));
+    expect(screen.getByText("Schritt 1 von 4")).toBeInTheDocument();
+
+    // Advance back to Step 4
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" })); // to Step 2
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" })); // to Step 3
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" })); // to Step 4
+    expect(screen.getByText("Schritt 4 von 4")).toBeInTheDocument();
+
+    // Click "Betrag bearbeiten" -> Jump to Step 2
+    fireEvent.click(screen.getByRole("button", { name: /betrag bearbeiten/i }));
+    expect(screen.getByText("Schritt 2 von 4")).toBeInTheDocument();
+
+    // Advance back to Step 4
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" })); // to Step 3
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" })); // to Step 4
+    expect(screen.getByText("Schritt 4 von 4")).toBeInTheDocument();
+
+    // Click "Kategorie bearbeiten" -> Jump to Step 3
+    fireEvent.click(screen.getByRole("button", { name: /kategorie bearbeiten/i }));
+    expect(screen.getByText("Schritt 3 von 4")).toBeInTheDocument();
+  });
+
+  it("submits the form in Step 4 calling createTransactionAction with formatted decimal amount and optional description", async () => {
+    const { createTransactionAction } = await import("@/lib/actions/transaction");
+    vi.mocked(createTransactionAction).mockResolvedValueOnce({});
+
+    render(<TransactionForm accounts={mockAccounts} categories={mockCategories} />);
+
+    // Step 1: select Girokonto
+    fireEvent.click(screen.getAllByText("Girokonto")[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    // Step 2: enter amount 5000 (50,00 €)
+    const amountInput = screen.getByTestId("cent-amount-input");
+    fireEvent.change(amountInput, { target: { value: "5000" } });
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    // Step 3: select category Lebensmittel
+    fireEvent.click(screen.getByRole("button", { name: /Lebensmittel/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    // Step 4: enter description and submit
+    const descInput = screen.getByLabelText("Beschreibung (optional)");
+    fireEvent.change(descInput, { target: { value: "Supermarkteinkauf" } });
+
+    const submitBtn = screen.getByRole("button", { name: "Transaktion speichern" });
+    fireEvent.click(submitBtn);
+
+    const todayStr = new Date().toISOString().split("T")[0];
+    expect(createTransactionAction).toHaveBeenCalledWith({
+      type: "expense",
+      amount: "50.00",
+      description: "Supermarkteinkauf",
+      date: todayStr,
+      accountId: "acc-1",
+      categoryId: "cat-1",
+    });
+  });
+
+  it("displays error message if createTransactionAction returns an error", async () => {
+    const { createTransactionAction } = await import("@/lib/actions/transaction");
+    vi.mocked(createTransactionAction).mockResolvedValueOnce({
+      error: "Konto nicht gefunden.",
+    });
+
+    render(<TransactionForm accounts={mockAccounts} categories={mockCategories} />);
+
+    // Step 1: select Girokonto
+    fireEvent.click(screen.getAllByText("Girokonto")[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    // Step 2: enter amount 5000 (50,00 €)
+    const amountInput = screen.getByTestId("cent-amount-input");
+    fireEvent.change(amountInput, { target: { value: "5000" } });
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    // Step 3: select category Lebensmittel
+    fireEvent.click(screen.getByRole("button", { name: /Lebensmittel/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    // Step 4: submit form
+    const submitBtn = screen.getByRole("button", { name: "Transaktion speichern" });
+    fireEvent.click(submitBtn);
+
+    expect(await screen.findByText("Konto nicht gefunden.")).toBeInTheDocument();
+  });
 });
+
 

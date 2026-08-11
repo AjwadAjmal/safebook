@@ -362,31 +362,59 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
           </div>
         )}
 
-        {/* STEP 4: Summary & Submission (Provisional for Slice 4) */}
+        {/* STEP 4: Summary & Submission */}
         {currentStep === 4 && (
           <div className={styles.stepContainer}>
             <h2 className={styles.stepTitle}>Zusammenfassung</h2>
 
             <div className={styles.summaryCard}>
               <div className={styles.summaryRow}>
-                <span>Typ:</span>
-                <strong>{type === "expense" ? "Ausgabe" : "Einnahme"}</strong>
+                <div>
+                  <span className={styles.summaryLabel}>Konto</span>
+                  <div className={styles.summaryValue}>{selectedAccount?.name}</div>
+                </div>
+                <button
+                  type="button"
+                  aria-label="Konto bearbeiten"
+                  className={styles.editStepBtn}
+                  onClick={() => setCurrentStep(1)}
+                >
+                  ✏️
+                </button>
               </div>
+
               <div className={styles.summaryRow}>
-                <span>Konto:</span>
-                <strong>{selectedAccount?.name}</strong>
+                <div>
+                  <span className={styles.summaryLabel}>Betrag & Typ</span>
+                  <div className={`${styles.summaryValue} tabular-nums`}>
+                    {formatCentAmount(centAmount)} ({type === "expense" ? "Ausgabe" : "Einnahme"})
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  aria-label="Betrag bearbeiten"
+                  className={styles.editStepBtn}
+                  onClick={() => setCurrentStep(2)}
+                >
+                  ✏️
+                </button>
               </div>
+
               <div className={styles.summaryRow}>
-                <span>Betrag:</span>
-                <strong className="tabular-nums">{formatCentAmount(centAmount)}</strong>
-              </div>
-              <div className={styles.summaryRow}>
-                <span>Kategorie:</span>
-                <strong>{selectedCategory?.name}</strong>
-              </div>
-              <div className={styles.summaryRow}>
-                <span>Datum:</span>
-                <strong>{date}</strong>
+                <div>
+                  <span className={styles.summaryLabel}>Datum & Kategorie</span>
+                  <div className={styles.summaryValue}>
+                    {selectedCategory ? `${getCategoryEmoji(selectedCategory.icon)} ${selectedCategory.name}` : ""}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  aria-label="Kategorie bearbeiten"
+                  className={styles.editStepBtn}
+                  onClick={() => setCurrentStep(3)}
+                >
+                  ✏️
+                </button>
               </div>
             </div>
 
