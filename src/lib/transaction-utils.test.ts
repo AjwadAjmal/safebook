@@ -1,6 +1,17 @@
 import { test } from "node:test";
 import assert from "node:assert";
-import { calculateNewBalance, calculateBalanceRollback, calculateBalanceAdjustmentOnEdit } from "./transaction-utils";
+import {
+  calculateNewBalance,
+  calculateBalanceRollback,
+  calculateBalanceAdjustmentOnEdit,
+  appendDigitToCentAmount,
+  removeDigitFromCentAmount,
+  formatCentAmount,
+  centAmountToDecimalString,
+  isAccountStepValid,
+  isAmountStepValid,
+  isCategoryStepValid
+} from "./transaction-utils";
 
 test("calculateNewBalance should subtract amount from current balance for expenses", () => {
   const result = calculateNewBalance("100.00", "25.50", "expense");
@@ -45,4 +56,58 @@ test("calculateBalanceAdjustmentOnEdit should correctly compute new balance when
   );
   assert.strictEqual(res2, "150.00");
 });
+
+test("appendDigitToCentAmount should accumulate numeric digits and handle zero prefix correctly", () => {
+  assert.strictEqual(appendDigitToCentAmount("", "2"), "2");
+  assert.strictEqual(appendDigitToCentAmount("2", "0"), "20");
+  assert.strictEqual(appendDigitToCentAmount("20", "0"), "200");
+  assert.strictEqual(appendDigitToCentAmount("200", "0"), "2000");
+  assert.strictEqual(appendDigitToCentAmount("0", "2"), "2");
+  assert.strictEqual(appendDigitToCentAmount("123", "a"), "123");
+});
+
+test("removeDigitFromCentAmount should remove last digit or return empty string", () => {
+  assert.strictEqual(removeDigitFromCentAmount("2000"), "200");
+  assert.strictEqual(removeDigitFromCentAmount("200"), "20");
+  assert.strictEqual(removeDigitFromCentAmount("20"), "2");
+  assert.strictEqual(removeDigitFromCentAmount("2"), "");
+  assert.strictEqual(removeDigitFromCentAmount(""), "");
+});
+
+test("formatCentAmount should format cent strings into localized German currency display format", () => {
+  assert.strictEqual(formatCentAmount(""), "0,00 €");
+  assert.strictEqual(formatCentAmount("0"), "0,00 €");
+  assert.strictEqual(formatCentAmount("2"), "0,02 €");
+  assert.strictEqual(formatCentAmount("20"), "0,20 €");
+  assert.strictEqual(formatCentAmount("2000"), "20,00 €");
+  assert.strictEqual(formatCentAmount("123456"), "1.234,56 €");
+});
+
+test("centAmountToDecimalString should convert cent string into standard decimal string", () => {
+  assert.strictEqual(centAmountToDecimalString(""), "0.00");
+  assert.strictEqual(centAmountToDecimalString("0"), "0.00");
+  assert.strictEqual(centAmountToDecimalString("2"), "0.02");
+  assert.strictEqual(centAmountToDecimalString("20"), "0.20");
+  assert.strictEqual(centAmountToDecimalString("2000"), "20.00");
+  assert.strictEqual(centAmountToDecimalString("123456"), "1234.56");
+});
+
+test("step validation helpers should accurately validate each wizard step condition", () => {
+  assert.strictEqual(isAccountStepValid("acc_123"), true);
+  assert.strictEqual(isAccountStepValid(""), false);
+  assert.strictEqual(isAccountStepValid(null), false);
+  assert.strictEqual(isAccountStepValid(undefined), false);
+
+  assert.strictEqual(isAmountStepValid("2000"), true);
+  assert.strictEqual(isAmountStepValid("2"), true);
+  assert.strictEqual(isAmountStepValid("0"), false);
+  assert.strictEqual(isAmountStepValid(""), false);
+
+  assert.strictEqual(isCategoryStepValid("cat_123"), true);
+  assert.strictEqual(isCategoryStepValid(""), false);
+  assert.strictEqual(isCategoryStepValid(null), false);
+  assert.strictEqual(isCategoryStepValid(undefined), false);
+});
+
+
 
