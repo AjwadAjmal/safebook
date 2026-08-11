@@ -85,7 +85,7 @@ describe("NewTransactionPage", () => {
 
     expect(screen.getByText("Neue Transaktion")).toBeInTheDocument();
     expect(screen.getByText(/Girokonto Main/i)).toBeInTheDocument();
-    expect(screen.getByText("Lebensmittel")).toBeInTheDocument();
+    expect(screen.getByText("Schritt 1 von 4")).toBeInTheDocument();
     expect(seedStandardCategories).toHaveBeenCalled();
   });
 });

@@ -3,11 +3,16 @@
 import { useState } from "react";
 import Link from "next/link";
 import styles from "./transaction-form.module.css";
+import { createTransactionAction } from "@/lib/actions/transaction";
 import {
-  createTransactionAction,
-} from "@/lib/actions/transaction";
-import { isValidDecimalInput } from "@/lib/account-utils";
-
+  appendDigitToCentAmount,
+  removeDigitFromCentAmount,
+  formatCentAmount,
+  centAmountToDecimalString,
+  isAccountStepValid,
+  isAmountStepValid,
+  isCategoryStepValid,
+} from "@/lib/transaction-utils";
 import { CategoryModal } from "./category-modal";
 
 export interface AccountOption {
@@ -30,14 +35,41 @@ interface TransactionFormProps {
   categories: CategoryOption[];
 }
 
+function formatAccountTypeLabel(type: string): string {
+  switch (type.toLowerCase()) {
+    case "giro":
+      return "Girokonto";
+    case "cash":
+      return "Bargeld";
+    case "depot":
+      return "Depot";
+    case "savings":
+      return "Sparkonto";
+    default:
+      return type;
+  }
+}
+
+function formatCurrency(val: string | number): string {
+  const num = typeof val === "number" ? val : parseFloat(val);
+  if (isNaN(num)) return "0,00 €";
+  return new Intl.NumberFormat("de-DE", {
+    style: "currency",
+    currency: "EUR",
+  }).format(num).replace(/\s/g, " ");
+}
+
 export function TransactionForm({ accounts, categories: initialCategories }: TransactionFormProps) {
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [categories, setCategories] = useState<CategoryOption[]>(initialCategories);
+
+  // Form fields state
+  const [accountId, setAccountId] = useState<string>("");
+  const [centAmount, setCentAmount] = useState<string>("");
   const [type, setType] = useState<"expense" | "income">("expense");
-  const [accountId, setAccountId] = useState<string>(accounts[0]?.id || "");
-  const [amount, setAmount] = useState<string>("");
-  const [description, setDescription] = useState<string>("");
   const [date, setDate] = useState<string>(() => new Date().toISOString().split("T")[0]);
-  const [categoryId, setCategoryId] = useState<string>(categories[0]?.id || "");
+  const [categoryId, setCategoryId] = useState<string>(initialCategories[0]?.id || "");
+  const [description, setDescription] = useState<string>("");
 
   // Category Modal state
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -50,17 +82,17 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
     e.preventDefault();
     setError(null);
 
-    if (!amount.trim()) {
-      setError("Bitte einen Betrag eingeben.");
-      return;
-    }
-
-    if (!accountId) {
+    if (!isAccountStepValid(accountId)) {
       setError("Bitte ein Konto auswählen.");
       return;
     }
 
-    if (!categoryId) {
+    if (!isAmountStepValid(centAmount)) {
+      setError("Bitte einen gültigen Betrag eingeben.");
+      return;
+    }
+
+    if (!isCategoryStepValid(categoryId)) {
       setError("Bitte eine Kategorie auswählen.");
       return;
     }
@@ -68,9 +100,10 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
     setIsSubmitting(true);
 
     try {
+      const formattedAmount = centAmountToDecimalString(centAmount);
       const res = await createTransactionAction({
         type,
-        amount,
+        amount: formattedAmount,
         description: description.trim() || null,
         date,
         accountId,
@@ -82,7 +115,6 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
         setIsSubmitting(false);
       }
     } catch (err: unknown) {
-      // If Next.js redirect happens, error digest NEXT_REDIRECT might be thrown in client
       const errorObj = err as { digest?: string };
       if (!errorObj.digest?.startsWith("NEXT_REDIRECT")) {
         console.error(err);
@@ -92,158 +124,293 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
     }
   };
 
+  const selectedAccount = accounts.find((a) => a.id === accountId);
+  const selectedCategory = categories.find((c) => c.id === categoryId);
+
   return (
     <>
-    <form className={styles.formContainer} onSubmit={handleSubmit}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>Neue Transaktion</h1>
-        <Link href="/" className={styles.cancelLink}>
-          Abbrechen
-        </Link>
-      </div>
-
-      {error && <div className={styles.errorMessage}>{error}</div>}
-
-      {/* Transaction Type Toggle */}
-      <div className={styles.typeToggle}>
-        <button
-          type="button"
-          className={`${styles.typeButton} ${
-            type === "expense" ? styles.typeButtonExpenseActive : ""
-          }`}
-          onClick={() => setType("expense")}
-        >
-          Ausgabe
-        </button>
-        <button
-          type="button"
-          className={`${styles.typeButton} ${
-            type === "income" ? styles.typeButtonIncomeActive : ""
-          }`}
-          onClick={() => setType("income")}
-        >
-          Einnahme
-        </button>
-      </div>
-
-      {/* Account Selection */}
-      <div className={styles.formGroup}>
-        <label htmlFor="accountId" className={styles.label}>
-          Konto
-        </label>
-        <select
-          id="accountId"
-          className={styles.select}
-          value={accountId}
-          onChange={(e) => setAccountId(e.target.value)}
-        >
-          {accounts.map((acc) => (
-            <option key={acc.id} value={acc.id}>
-              {acc.name} ({acc.currentValue} €)
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Amount Input */}
-      <div className={styles.formGroup}>
-        <label htmlFor="amount" className={styles.label}>
-          Betrag (€)
-        </label>
-        <input
-          id="amount"
-          type="text"
-          inputMode="decimal"
-          placeholder="0,00"
-          className={`${styles.input} tabular-nums`}
-          value={amount}
-          onChange={(e) => {
-            const val = e.target.value;
-            if (isValidDecimalInput(val)) {
-              setAmount(val);
-            }
-          }}
-          required
-        />
-      </div>
-
-      {/* Date Picker */}
-      <div className={styles.formGroup}>
-        <label htmlFor="date" className={styles.label}>
-          Datum
-        </label>
-        <input
-          id="date"
-          type="date"
-          className={styles.input}
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          required
-        />
-      </div>
-
-      {/* Category Picker */}
-      <div className={styles.formGroup}>
-        <div className={styles.categoryHeader}>
-          <label htmlFor="categoryId" className={styles.label}>
-            Kategorie
-          </label>
-          <button
-            type="button"
-            className={styles.inlineCategoryBtn}
-            onClick={() => setIsCategoryModalOpen(true)}
-          >
-            + Neue Kategorie
-          </button>
+      <form className={styles.formContainer} onSubmit={handleSubmit}>
+        {/* Wizard Progress Header */}
+        <div className={styles.headerContainer}>
+          <div className={styles.progressRow}>
+            {currentStep > 1 ? (
+              <button
+                type="button"
+                className={styles.backButton}
+                onClick={() => setCurrentStep((prev) => (prev - 1) as 1 | 2 | 3 | 4)}
+              >
+                Zurück
+              </button>
+            ) : (
+              <h1 className={styles.title}>Neue Transaktion</h1>
+            )}
+            <span className={styles.stepIndicator}>Schritt {currentStep} von 4</span>
+            <Link href="/" className={styles.cancelLink}>
+              Abbrechen
+            </Link>
+          </div>
+          <div className={styles.progressBarTrack}>
+            <div
+              className={styles.progressBarFill}
+              style={{ width: `${(currentStep / 4) * 100}%` }}
+            />
+          </div>
         </div>
 
-        <select
-          id="categoryId"
-          className={styles.select}
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
-        >
-          {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name}
-            </option>
-          ))}
-        </select>
-      </div>
+        {error && <div className={styles.errorMessage}>{error}</div>}
 
-      {/* Description */}
-      <div className={styles.formGroup}>
-        <label htmlFor="description" className={styles.label}>
-          Beschreibung (optional)
-        </label>
-        <input
-          id="description"
-          type="text"
-          placeholder="z. B. Supermarkteinkauf"
-          className={styles.input}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-      </div>
+        {/* STEP 1: Account Selection */}
+        {currentStep === 1 && (
+          <div className={styles.stepContainer}>
+            <h2 className={styles.stepTitle}>Konto auswählen</h2>
+            <div className={styles.accountList}>
+              {accounts.map((acc) => {
+                const isSelected = acc.id === accountId;
+                return (
+                  <button
+                    key={acc.id}
+                    type="button"
+                    data-account-tile
+                    className={`${styles.accountTile} ${isSelected ? styles.accountTileSelected : ""}`}
+                    onClick={() => setAccountId(acc.id)}
+                  >
+                    <div className={styles.accountTileHeader}>
+                      <span className={styles.accountTileName}>{acc.name}</span>
+                      <span className={styles.accountTypeBadge}>
+                        {formatAccountTypeLabel(acc.type)}
+                      </span>
+                    </div>
+                    <div className={`${styles.accountTileBalance} tabular-nums`}>
+                      {formatCurrency(acc.currentValue)}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
 
-      {/* Submit Button */}
-      <button
-        type="submit"
-        className={styles.submitButton}
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? "Wird gespeichert..." : "Transaktion speichern"}
-      </button>
-    </form>
+            <button
+              type="button"
+              className={styles.primaryBtn}
+              disabled={!isAccountStepValid(accountId)}
+              onClick={() => setCurrentStep(2)}
+            >
+              Weiter
+            </button>
+          </div>
+        )}
 
-    <CategoryModal
-      isOpen={isCategoryModalOpen}
-      onClose={() => setIsCategoryModalOpen(false)}
-      onSuccess={(newCat) => {
-        setCategories((prev) => [...prev, newCat]);
-        setCategoryId(newCat.id);
-      }}
-    />
+        {/* STEP 2: Betrag & Typ */}
+        {currentStep === 2 && (
+          <div className={styles.stepContainer}>
+            <h2 className={styles.stepTitle}>Betrag & Typ</h2>
+
+            {/* Segmented Expense/Income Switch */}
+            <div className={styles.typeToggle}>
+              <button
+                type="button"
+                className={`${styles.typeButton} ${
+                  type === "expense" ? styles.typeButtonExpenseActive : ""
+                }`}
+                onClick={() => setType("expense")}
+              >
+                Ausgabe
+              </button>
+              <button
+                type="button"
+                className={`${styles.typeButton} ${
+                  type === "income" ? styles.typeButtonIncomeActive : ""
+                }`}
+                onClick={() => setType("income")}
+              >
+                Einnahme
+              </button>
+            </div>
+
+            {/* Prominent Cent Amount Display */}
+            <div className={styles.amountCard}>
+              <div className={`${styles.amountDisplay} tabular-nums`}>
+                {formatCentAmount(centAmount)}
+              </div>
+              <input
+                data-testid="cent-amount-input"
+                type="text"
+                inputMode="numeric"
+                value={centAmount}
+                onChange={(e) => {
+                  const clean = e.target.value.replace(/\D/g, "");
+                  if (clean.length <= 9) {
+                    setCentAmount(clean);
+                  }
+                }}
+                className={styles.srInput}
+              />
+            </div>
+
+            {/* Numeric Keypad */}
+            <div className={styles.keypadGrid}>
+              {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((digit) => (
+                <button
+                  key={digit}
+                  type="button"
+                  className={styles.keypadBtn}
+                  onClick={() => setCentAmount((prev) => appendDigitToCentAmount(prev, digit))}
+                >
+                  {digit}
+                </button>
+              ))}
+              <button
+                type="button"
+                className={styles.keypadBtnSecondary}
+                onClick={() => setCentAmount("")}
+              >
+                C
+              </button>
+              <button
+                type="button"
+                className={styles.keypadBtn}
+                onClick={() => setCentAmount((prev) => appendDigitToCentAmount(prev, "0"))}
+              >
+                0
+              </button>
+              <button
+                type="button"
+                className={styles.keypadBtnSecondary}
+                onClick={() => setCentAmount((prev) => removeDigitFromCentAmount(prev))}
+              >
+                ⌫
+              </button>
+            </div>
+
+            <button
+              type="button"
+              className={styles.primaryBtn}
+              disabled={!isAmountStepValid(centAmount)}
+              onClick={() => setCurrentStep(3)}
+            >
+              Weiter
+            </button>
+          </div>
+        )}
+
+        {/* STEP 3: Date & Category (Provisional for Slice 3) */}
+        {currentStep === 3 && (
+          <div className={styles.stepContainer}>
+            <h2 className={styles.stepTitle}>Datum & Kategorie</h2>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="date" className={styles.label}>
+                Datum
+              </label>
+              <input
+                id="date"
+                type="date"
+                className={styles.input}
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className={styles.formGroup}>
+              <div className={styles.categoryHeader}>
+                <label htmlFor="categoryId" className={styles.label}>
+                  Kategorie
+                </label>
+                <button
+                  type="button"
+                  className={styles.inlineCategoryBtn}
+                  onClick={() => setIsCategoryModalOpen(true)}
+                >
+                  + Neue Kategorie
+                </button>
+              </div>
+              <select
+                id="categoryId"
+                className={styles.select}
+                value={categoryId}
+                onChange={(e) => setCategoryId(e.target.value)}
+              >
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <button
+              type="button"
+              className={styles.primaryBtn}
+              disabled={!isCategoryStepValid(categoryId)}
+              onClick={() => setCurrentStep(4)}
+            >
+              Weiter
+            </button>
+          </div>
+        )}
+
+        {/* STEP 4: Summary & Submission (Provisional for Slice 4) */}
+        {currentStep === 4 && (
+          <div className={styles.stepContainer}>
+            <h2 className={styles.stepTitle}>Zusammenfassung</h2>
+
+            <div className={styles.summaryCard}>
+              <div className={styles.summaryRow}>
+                <span>Typ:</span>
+                <strong>{type === "expense" ? "Ausgabe" : "Einnahme"}</strong>
+              </div>
+              <div className={styles.summaryRow}>
+                <span>Konto:</span>
+                <strong>{selectedAccount?.name}</strong>
+              </div>
+              <div className={styles.summaryRow}>
+                <span>Betrag:</span>
+                <strong className="tabular-nums">{formatCentAmount(centAmount)}</strong>
+              </div>
+              <div className={styles.summaryRow}>
+                <span>Kategorie:</span>
+                <strong>{selectedCategory?.name}</strong>
+              </div>
+              <div className={styles.summaryRow}>
+                <span>Datum:</span>
+                <strong>{date}</strong>
+              </div>
+            </div>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="description" className={styles.label}>
+                Beschreibung (optional)
+              </label>
+              <input
+                id="description"
+                type="text"
+                placeholder="z. B. Supermarkteinkauf"
+                className={styles.input}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </div>
+
+            <button
+              type="submit"
+              className={styles.submitButton}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Wird gespeichert..." : "Transaktion speichern"}
+            </button>
+          </div>
+        )}
+      </form>
+
+      <CategoryModal
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+        onSuccess={(newCat) => {
+          setCategories((prev) => [...prev, newCat]);
+          setCategoryId(newCat.id);
+        }}
+      />
     </>
   );
 }
+
