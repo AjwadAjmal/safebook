@@ -26,6 +26,12 @@ export const CURATED_CATEGORY_ICONS: CuratedIcon[] = [
   { key: "health", emoji: "🏥", label: "Gesundheit" },
 ];
 
+export function getCategoryEmoji(iconKey?: string | null): string {
+  if (!iconKey) return "🏷️";
+  const found = CURATED_CATEGORY_ICONS.find((item) => item.key === iconKey);
+  return found ? found.emoji : "🏷️";
+}
+
 export interface CategoryModalProps {
   isOpen: boolean;
   onClose: () => void;

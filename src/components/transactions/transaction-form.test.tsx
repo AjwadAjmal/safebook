@@ -89,5 +89,93 @@ describe("TransactionForm (Multi-Step Wizard - Slice 2)", () => {
     fireEvent.click(backBtn);
     expect(screen.getByText("Schritt 1 von 4")).toBeInTheDocument();
   });
+
+  it("renders Step 3 date picker with 'Heute' quick chip defaulting to today's date, 3-column category grid with no initial selection and disabled Weiter button", () => {
+    render(<TransactionForm accounts={mockAccounts} categories={mockCategories} />);
+
+    // Step 1: select account
+    fireEvent.click(screen.getAllByText("Girokonto")[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    // Step 2: enter amount
+    const amountInput = screen.getByTestId("cent-amount-input");
+    fireEvent.change(amountInput, { target: { value: "2000" } });
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    // Now in Step 3
+    expect(screen.getByText("Schritt 3 von 4")).toBeInTheDocument();
+    expect(screen.getByText("Datum & Kategorie")).toBeInTheDocument();
+
+    const todayStr = new Date().toISOString().split("T")[0];
+    const dateInput = screen.getByLabelText("Datum") as HTMLInputElement;
+    expect(dateInput.value).toBe(todayStr);
+
+    const heuteChip = screen.getByRole("button", { name: "Heute" });
+    expect(heuteChip).toBeInTheDocument();
+
+    // Change date and test chip click
+    fireEvent.change(dateInput, { target: { value: "2025-01-01" } });
+    expect(dateInput.value).toBe("2025-01-01");
+    fireEvent.click(heuteChip);
+    expect(dateInput.value).toBe(todayStr);
+
+    // Verify categories in 3-column grid
+    expect(screen.getByText("Lebensmittel")).toBeInTheDocument();
+    expect(screen.getByText("Tanken")).toBeInTheDocument();
+
+    // No category selected by default -> Weiter button disabled
+    const nextBtn = screen.getByRole("button", { name: "Weiter" }) as HTMLButtonElement;
+    expect(nextBtn).toBeDisabled();
+
+    // Select category tile "Lebensmittel"
+    const catTile = screen.getByRole("button", { name: /Lebensmittel/i });
+    fireEvent.click(catTile);
+
+    // Weiter button enabled
+    expect(nextBtn).not.toBeDisabled();
+  });
+
+  it("triggers CategoryModal on '+ Neue Kategorie' click and automatically selects newly created category", async () => {
+    const { createCustomCategoryAction } = await import("@/lib/actions/transaction");
+    vi.mocked(createCustomCategoryAction).mockResolvedValueOnce({
+      category: {
+        id: "cat-new-99",
+        name: "Hobbies",
+        icon: "sports",
+        householdId: "hh-1",
+      },
+    });
+
+    render(<TransactionForm accounts={mockAccounts} categories={mockCategories} />);
+
+    // Step 1: select account
+    fireEvent.click(screen.getAllByText("Girokonto")[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    // Step 2: enter amount
+    const amountInput = screen.getByTestId("cent-amount-input");
+    fireEvent.change(amountInput, { target: { value: "1500" } });
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    // Step 3
+    const newCategoryBtn = screen.getByRole("button", { name: "+ Neue Kategorie" });
+    fireEvent.click(newCategoryBtn);
+
+    // Modal opens
+    expect(screen.getByRole("heading", { name: "Kategorie erstellen" })).toBeInTheDocument();
+
+    // Fill modal input
+    const modalInput = screen.getByLabelText("Kategoriename");
+    fireEvent.change(modalInput, { target: { value: "Hobbies" } });
+
+    // Submit modal
+    const saveBtn = screen.getByRole("button", { name: "Speichern" });
+    fireEvent.click(saveBtn);
+
+    // Wait for category to be added and selected
+    expect(await screen.findByText("Hobbies")).toBeInTheDocument();
+    const nextBtn = screen.getByRole("button", { name: "Weiter" }) as HTMLButtonElement;
+    expect(nextBtn).not.toBeDisabled();
+  });
 });
 

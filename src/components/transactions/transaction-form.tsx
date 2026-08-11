@@ -13,7 +13,7 @@ import {
   isAmountStepValid,
   isCategoryStepValid,
 } from "@/lib/transaction-utils";
-import { CategoryModal } from "./category-modal";
+import { CategoryModal, getCategoryEmoji } from "./category-modal";
 
 export interface AccountOption {
   id: string;
@@ -68,7 +68,7 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
   const [centAmount, setCentAmount] = useState<string>("");
   const [type, setType] = useState<"expense" | "income">("expense");
   const [date, setDate] = useState<string>(() => new Date().toISOString().split("T")[0]);
-  const [categoryId, setCategoryId] = useState<string>(initialCategories[0]?.id || "");
+  const [categoryId, setCategoryId] = useState<string>("");
   const [description, setDescription] = useState<string>("");
 
   // Category Modal state
@@ -292,15 +292,24 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
           </div>
         )}
 
-        {/* STEP 3: Date & Category (Provisional for Slice 3) */}
+        {/* STEP 3: Date & Category */}
         {currentStep === 3 && (
           <div className={styles.stepContainer}>
             <h2 className={styles.stepTitle}>Datum & Kategorie</h2>
 
             <div className={styles.formGroup}>
-              <label htmlFor="date" className={styles.label}>
-                Datum
-              </label>
+              <div className={styles.dateHeader}>
+                <label htmlFor="date" className={styles.label}>
+                  Datum
+                </label>
+                <button
+                  type="button"
+                  className={styles.quickChipBtn}
+                  onClick={() => setDate(new Date().toISOString().split("T")[0])}
+                >
+                  Heute
+                </button>
+              </div>
               <input
                 id="date"
                 type="date"
@@ -313,9 +322,7 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
 
             <div className={styles.formGroup}>
               <div className={styles.categoryHeader}>
-                <label htmlFor="categoryId" className={styles.label}>
-                  Kategorie
-                </label>
+                <label className={styles.label}>Kategorie</label>
                 <button
                   type="button"
                   className={styles.inlineCategoryBtn}
@@ -324,18 +331,24 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
                   + Neue Kategorie
                 </button>
               </div>
-              <select
-                id="categoryId"
-                className={styles.select}
-                value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
-              >
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
+              <div className={styles.categoryGrid}>
+                {categories.map((cat) => {
+                  const isSelected = cat.id === categoryId;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      className={`${styles.categoryTile} ${
+                        isSelected ? styles.categoryTileSelected : ""
+                      }`}
+                      onClick={() => setCategoryId(cat.id)}
+                    >
+                      <span className={styles.categoryIcon}>{getCategoryEmoji(cat.icon)}</span>
+                      <span className={styles.categoryName}>{cat.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <button
