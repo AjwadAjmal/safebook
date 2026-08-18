@@ -37,7 +37,7 @@ export function SidebarNavigation({
 
   const navLinks = [
     { href: "/", label: "Dashboard" },
-    { href: "/accounts", label: "Meine Konten" },
+    { href: "/accounts", label: "Kontenübersicht" },
     { href: "/transactions/new", label: "Neue Transaktion" },
   ];
 

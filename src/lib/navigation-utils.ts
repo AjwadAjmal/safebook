@@ -4,7 +4,7 @@
 
 const ROUTE_TITLE_MAP: Record<string, string> = {
   '/': 'Dashboard',
-  '/accounts': 'Meine Konten',
+  '/accounts': 'Kontenübersicht',
   '/transactions/new': 'Neue Transaktion',
 };
 
