@@ -1,5 +1,5 @@
 import AccountsPage from './page'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { auth } from '@/auth'
 import { getHouseholdById } from '@/lib/household-utils'
@@ -108,21 +108,113 @@ describe('Accounts Page (/accounts)', () => {
 
     // Check Gesamtsaldo (1500 + 500 + 200 = 2200.00)
     expect(screen.getByText('Gesamtsaldo')).toBeInTheDocument()
-    expect(screen.getByText('2200.00 €')).toBeInTheDocument()
+    const saldoValue = screen.getByText('2200.00 €')
+    expect(saldoValue).toBeInTheDocument()
+    expect(saldoValue.className).toContain('saldoPositive')
+    expect(saldoValue.className).not.toContain('saldoNegative')
 
-    // Check group headers and group subtotals
+    // Check group headers and group subtotals (must remain neutral)
     expect(screen.getByText('Girokonten')).toBeInTheDocument()
-    expect(screen.getByText('1500.00 €')).toBeInTheDocument()
+    const giroSubtotal = screen.getByText('1500.00 €')
+    expect(giroSubtotal).toBeInTheDocument()
+    expect(giroSubtotal.className).not.toContain('saldoPositive')
+    expect(giroSubtotal.className).not.toContain('saldoNegative')
 
     expect(screen.getByText('Aktiendepots')).toBeInTheDocument()
-    expect(screen.getByText('500.00 €')).toBeInTheDocument()
+    const depotSubtotal = screen.getByText('500.00 €')
+    expect(depotSubtotal).toBeInTheDocument()
+    expect(depotSubtotal.className).not.toContain('saldoPositive')
+    expect(depotSubtotal.className).not.toContain('saldoNegative')
 
     expect(screen.getByText('Kasse / Bargeld')).toBeInTheDocument()
-    expect(screen.getByText('200.00 €')).toBeInTheDocument()
+    const cashSubtotal = screen.getByText('200.00 €')
+    expect(cashSubtotal).toBeInTheDocument()
+    expect(cashSubtotal.className).not.toContain('saldoPositive')
+    expect(cashSubtotal.className).not.toContain('saldoNegative')
 
     // Check account names
     expect(screen.getByText('Girokonto A')).toBeInTheDocument()
     expect(screen.getByText('Aktiendepot B')).toBeInTheDocument()
     expect(screen.getByText('Bargeld C')).toBeInTheDocument()
   })
+
+  it('renders negative Gesamtsaldo with negative styling and zero Gesamtsaldo with neutral styling on /accounts', async () => {
+    const mockSession = {
+      user: {
+        id: 'user-123',
+        role: 'admin' as const,
+        householdId: 'household-456',
+        name: 'TestUser',
+      },
+      expires: 'token-expires',
+    }
+    vi.mocked(auth).mockResolvedValue(mockSession)
+    vi.mocked(getHouseholdById).mockResolvedValue({
+      id: 'household-456',
+      name: 'Haushalt Schmidt',
+      inviteCode: 'INV123',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
+
+    // Test negative balance (-500.00)
+    vi.mocked(getAccountsByHouseholdId).mockResolvedValue([
+      {
+        id: 'acc-1',
+        userId: 'user-123',
+        householdId: 'household-456',
+        type: 'giro' as const,
+        name: 'Girokonto A',
+        institution: 'Sparkasse',
+        currentValue: '-500.00',
+        investedCapital: null,
+        initialDate: new Date('2026-07-15'),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ])
+
+    const jsxNegative = await AccountsPage()
+    const { unmount } = render(jsxNegative!)
+
+    const negativeCard = screen.getByText('Gesamtsaldo').parentElement!
+    const negativeSaldo = within(negativeCard).getByText('-500.00 €')
+    expect(negativeSaldo.className).toContain('saldoNegative')
+    expect(negativeSaldo.className).not.toContain('saldoPositive')
+
+    // Subtotal must remain neutral
+    const giroGroup = screen.getByText('Girokonten').parentElement!
+    const negativeSubtotal = within(giroGroup).getByText('-500.00 €')
+    expect(negativeSubtotal.className).not.toContain('saldoNegative')
+    expect(negativeSubtotal.className).not.toContain('saldoPositive')
+
+    unmount()
+
+    // Test zero balance (0.00)
+    vi.mocked(getAccountsByHouseholdId).mockResolvedValue([
+      {
+        id: 'acc-1',
+        userId: 'user-123',
+        householdId: 'household-456',
+        type: 'cash' as const,
+        name: 'Bargeld C',
+        institution: null,
+        currentValue: '0.00',
+        investedCapital: null,
+        initialDate: new Date('2026-07-15'),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ])
+
+    const jsxZero = await AccountsPage()
+    render(jsxZero!)
+
+    const zeroCard = screen.getByText('Gesamtsaldo').parentElement!
+    const zeroSaldo = within(zeroCard).getByText('0.00 €')
+    expect(zeroSaldo.className).not.toContain('saldoPositive')
+    expect(zeroSaldo.className).not.toContain('saldoNegative')
+  })
 })
+
+

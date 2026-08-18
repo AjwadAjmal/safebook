@@ -129,6 +129,10 @@ describe('Root Page (Home) - Landing vs Dashboard', () => {
     expect(saldoCardLink).toHaveTextContent('2200.00 €')
     expect(saldoCardLink).toHaveTextContent('›')
 
+    const saldoValue = screen.getByText('2200.00 €')
+    expect(saldoValue.className).toContain('saldoPositive')
+    expect(saldoValue.className).not.toContain('saldoNegative')
+
     // Check quicklink button
     expect(screen.getAllByRole('link', { name: /Neue Transaktion/i }).length).toBeGreaterThan(0)
 
@@ -140,5 +144,78 @@ describe('Root Page (Home) - Landing vs Dashboard', () => {
     // Check recent transactions section is still rendered
     expect(screen.getByText('Letzte Transaktionen')).toBeInTheDocument()
   })
+
+  it('renders negative Gesamtsaldo with negative styling and zero Gesamtsaldo with neutral styling', async () => {
+    const mockSession = {
+      user: {
+        id: 'user-123',
+        role: 'admin' as const,
+        householdId: 'household-456',
+        name: 'TestUser',
+      },
+      expires: 'token-expires',
+    }
+    vi.mocked(auth).mockResolvedValue(mockSession)
+    vi.mocked(getHouseholdById).mockResolvedValue({
+      id: 'household-456',
+      name: 'Haushalt Schmidt',
+      inviteCode: 'INV123',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
+    vi.mocked(getRecentTransactionsWithDetails).mockResolvedValue([])
+    vi.mocked(getCategoriesForHousehold).mockResolvedValue([])
+
+    // Test negative balance (-350.00)
+    vi.mocked(getAccountsByHouseholdId).mockResolvedValue([
+      {
+        id: 'acc-1',
+        userId: 'user-123',
+        householdId: 'household-456',
+        type: 'giro' as const,
+        name: 'Girokonto A',
+        institution: 'Sparkasse',
+        currentValue: '-350.00',
+        investedCapital: null,
+        initialDate: new Date('2026-07-15'),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ])
+
+    const jsxNegative = await Home()
+    const { unmount } = render(jsxNegative)
+
+    const negativeSaldo = screen.getByText('-350.00 €')
+    expect(negativeSaldo.className).toContain('saldoNegative')
+    expect(negativeSaldo.className).not.toContain('saldoPositive')
+
+    unmount()
+
+    // Test zero balance (0.00)
+    vi.mocked(getAccountsByHouseholdId).mockResolvedValue([
+      {
+        id: 'acc-1',
+        userId: 'user-123',
+        householdId: 'household-456',
+        type: 'giro' as const,
+        name: 'Girokonto A',
+        institution: 'Sparkasse',
+        currentValue: '0.00',
+        investedCapital: null,
+        initialDate: new Date('2026-07-15'),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ])
+
+    const jsxZero = await Home()
+    render(jsxZero)
+
+    const zeroSaldo = screen.getByText('0.00 €')
+    expect(zeroSaldo.className).not.toContain('saldoPositive')
+    expect(zeroSaldo.className).not.toContain('saldoNegative')
+  })
 })
+
 

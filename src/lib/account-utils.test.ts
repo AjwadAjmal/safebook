@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert";
-import { groupAccountsByType, getAccountGroupLabel, groupAccountsWithSubtotals } from "./account-utils";
+import { groupAccountsByType, getAccountGroupLabel, groupAccountsWithSubtotals, getBalanceColorClass } from "./account-utils";
 import { Account } from "@/types/profile-creation";
 
 test("groupAccountsByType should group accounts by type and maintain correct order (giro > depot > cash)", () => {
@@ -86,4 +86,32 @@ test("groupAccountsWithSubtotals should group accounts with labels and accurate 
 test("groupAccountsWithSubtotals should handle empty accounts array", () => {
   assert.deepStrictEqual(groupAccountsWithSubtotals([]), []);
 });
+
+test("getBalanceColorClass should return 'positive' for strictly positive values", () => {
+  assert.strictEqual(getBalanceColorClass(100), "positive");
+  assert.strictEqual(getBalanceColorClass(0.01), "positive");
+  assert.strictEqual(getBalanceColorClass("123.45"), "positive");
+  assert.strictEqual(getBalanceColorClass("50,00"), "positive");
+});
+
+test("getBalanceColorClass should return 'negative' for strictly negative values", () => {
+  assert.strictEqual(getBalanceColorClass(-100), "negative");
+  assert.strictEqual(getBalanceColorClass(-0.01), "negative");
+  assert.strictEqual(getBalanceColorClass("-123.45"), "negative");
+  assert.strictEqual(getBalanceColorClass("-50,00"), "negative");
+});
+
+test("getBalanceColorClass should return 'neutral' for zero, empty, or invalid values", () => {
+  assert.strictEqual(getBalanceColorClass(0), "neutral");
+  assert.strictEqual(getBalanceColorClass(-0), "neutral");
+  assert.strictEqual(getBalanceColorClass("0"), "neutral");
+  assert.strictEqual(getBalanceColorClass("0.00"), "neutral");
+  assert.strictEqual(getBalanceColorClass("-0.00"), "neutral");
+  assert.strictEqual(getBalanceColorClass("0,00"), "neutral");
+  assert.strictEqual(getBalanceColorClass(""), "neutral");
+  assert.strictEqual(getBalanceColorClass("invalid"), "neutral");
+  assert.strictEqual(getBalanceColorClass(NaN), "neutral");
+});
+
+
 

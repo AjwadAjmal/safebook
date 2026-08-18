@@ -5,7 +5,7 @@ import { getHouseholdById } from "@/lib/household-utils";
 import { getAccountsByHouseholdId } from "@/lib/account-db";
 import { getRecentTransactionsWithDetails } from "@/lib/transaction-db";
 import { getCategoriesForHousehold } from "@/lib/category-db";
-import { formatAmount } from "@/lib/account-utils";
+import { formatAmount, getBalanceColorClass } from "@/lib/account-utils";
 import { SidebarNavigation } from "@/components/navigation/sidebar-navigation";
 import { RecentTransactions } from "@/components/transactions/recent-transactions";
 import { Account } from "@/types/profile-creation";
@@ -36,6 +36,13 @@ export default async function Home() {
 
       const totalBalance = dbAccounts.reduce((sum, acc) => sum + Number(acc.currentValue), 0);
       const formattedTotalBalance = formatAmount(totalBalance);
+      const balanceColorClass = getBalanceColorClass(totalBalance);
+      const saldoColorStyle =
+        balanceColorClass === "positive"
+          ? styles.saldoPositive
+          : balanceColorClass === "negative"
+          ? styles.saldoNegative
+          : "";
 
       const handleLogout = async () => {
         "use server";
@@ -53,7 +60,7 @@ export default async function Home() {
               <Link href="/accounts" className={styles.saldoCard}>
                 <div className={styles.saldoContent}>
                   <span className={styles.saldoLabel}>Gesamtsaldo</span>
-                  <span className={`${styles.saldoValue} tabular-nums`}>
+                  <span className={`${styles.saldoValue} ${saldoColorStyle} tabular-nums`}>
                     {formattedTotalBalance} €
                   </span>
                 </div>

@@ -46,6 +46,15 @@
   color: var(--color-text-primary);
 }
 
+.saldoPositive {
+  color: var(--color-positive);
+}
+
+.saldoNegative {
+  color: var(--color-negative);
+}
+
+
 .accountGroup {
   display: flex;
   flex-direction: column;

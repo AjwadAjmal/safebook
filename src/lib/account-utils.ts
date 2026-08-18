@@ -79,3 +79,22 @@ export function isValidDecimalInput(input: string): boolean {
   if (parts.length === 2 && parts[1].length > 2) return false;
   return true;
 }
+
+export type BalanceColorClass = "positive" | "negative" | "neutral";
+
+export function getBalanceColorClass(amount: number | string): BalanceColorClass {
+  let num: number;
+  if (typeof amount === "string") {
+    const normalized = amount.replace(",", ".");
+    num = Number(normalized);
+  } else {
+    num = amount;
+  }
+
+  if (isNaN(num) || num === 0) {
+    return "neutral";
+  }
+
+  return num > 0 ? "positive" : "negative";
+}
+

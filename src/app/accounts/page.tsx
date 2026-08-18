@@ -5,6 +5,7 @@ import { getAccountsByHouseholdId } from "@/lib/account-db";
 import {
   formatAmount,
   groupAccountsWithSubtotals,
+  getBalanceColorClass,
 } from "@/lib/account-utils";
 import { SidebarNavigation } from "@/components/navigation/sidebar-navigation";
 import { AccountCard } from "@/components/auth/account-card";
@@ -47,6 +48,13 @@ export default async function AccountsPage() {
     0
   );
   const formattedTotalBalance = formatAmount(totalBalance);
+  const balanceColorClass = getBalanceColorClass(totalBalance);
+  const saldoColorStyle =
+    balanceColorClass === "positive"
+      ? styles.saldoPositive
+      : balanceColorClass === "negative"
+      ? styles.saldoNegative
+      : "";
 
   const groupedSummaries = groupAccountsWithSubtotals(mappedAccounts);
 
@@ -65,7 +73,7 @@ export default async function AccountsPage() {
         <div className={styles.accountsContainer}>
           <div className={styles.saldoCard}>
             <span className={styles.saldoLabel}>Gesamtsaldo</span>
-            <span className={`${styles.saldoValue} tabular-nums`}>
+            <span className={`${styles.saldoValue} ${saldoColorStyle} tabular-nums`}>
               {formattedTotalBalance} €
             </span>
           </div>
