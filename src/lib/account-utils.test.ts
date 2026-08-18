@@ -48,7 +48,7 @@ test("groupAccountsByType should return an empty array if no accounts are provid
 test("getAccountGroupLabel should return German human-readable labels for account types", () => {
   assert.strictEqual(getAccountGroupLabel("giro"), "Girokonten");
   assert.strictEqual(getAccountGroupLabel("depot"), "Aktiendepots");
-  assert.strictEqual(getAccountGroupLabel("cash"), "Kasse / Bargeld");
+  assert.strictEqual(getAccountGroupLabel("cash"), "Bargeldkonten");
 });
 
 test("groupAccountsWithSubtotals should group accounts with labels and accurate subtotals", () => {
@@ -78,7 +78,7 @@ test("groupAccountsWithSubtotals should group accounts with labels and accurate 
 
   // Cash group (150.50 + 0.00 = 150.50)
   assert.strictEqual(grouped[2].type, "cash");
-  assert.strictEqual(grouped[2].label, "Kasse / Bargeld");
+  assert.strictEqual(grouped[2].label, "Bargeldkonten");
   assert.strictEqual(grouped[2].accounts.length, 2);
   assert.strictEqual(grouped[2].subtotal, 150.5);
 });

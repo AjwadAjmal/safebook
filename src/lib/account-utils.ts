@@ -14,7 +14,7 @@ export function getAccountGroupLabel(type: AccountType): string {
     case "depot":
       return "Aktiendepots";
     case "cash":
-      return "Kasse / Bargeld";
+      return "Bargeldkonten";
     default:
       return type;
   }
