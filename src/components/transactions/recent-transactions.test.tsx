@@ -74,6 +74,24 @@ describe("RecentTransactions", () => {
     expect(screen.getByText("+ 1500.00 €")).toBeInTheDocument();
   });
 
+  it("renders recent transactions inside a unified card container with flush item rows", () => {
+    render(
+      <RecentTransactions
+        transactions={mockTransactions}
+        accounts={mockAccounts}
+        categories={mockCategories}
+      />
+    );
+
+    const listContainer = screen.getByTestId("recent-transactions-list");
+    expect(listContainer).toBeInTheDocument();
+
+    const items = screen.getAllByTestId("recent-transaction-item");
+    expect(items).toHaveLength(2);
+    expect(listContainer).toContainElement(items[0]);
+    expect(listContainer).toContainElement(items[1]);
+  });
+
   it("calls deleteTransactionAction when delete button is clicked", async () => {
     vi.mocked(deleteTransactionAction).mockResolvedValue({ success: true });
 

@@ -124,11 +124,11 @@ export function RecentTransactions({
       <h2 className={styles.header}>Letzte Transaktionen</h2>
 
       {transactions.length === 0 ? (
-        <div className={styles.emptyState}>
+        <div className={styles.emptyState} data-testid="recent-transactions-empty">
           Keine letzten Transaktionen vorhanden.
         </div>
       ) : (
-        <div className={styles.list}>
+        <div className={styles.list} data-testid="recent-transactions-list">
           {transactions.map((tx) => {
             const isExpense = tx.type === "expense";
             const numAmount = Number(tx.amount);
@@ -137,7 +137,11 @@ export function RecentTransactions({
             const emoji = getCategoryEmoji(tx.categoryIcon);
 
             return (
-              <div key={tx.id} className={styles.item}>
+              <div
+                key={tx.id}
+                className={styles.item}
+                data-testid="recent-transaction-item"
+              >
                 <div className={styles.itemMain}>
                   <div className={styles.categoryBadge} aria-hidden="true">
                     {emoji}

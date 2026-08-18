@@ -18,7 +18,7 @@
 .emptyState {
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: 16px;
   padding: var(--space-4);
   text-align: center;
   font-size: var(--text-sm);
@@ -28,7 +28,10 @@
 .list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  overflow: hidden;
 }
 
 .item {
@@ -36,15 +39,18 @@
   align-items: center;
   justify-content: space-between;
   background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
   padding: var(--space-3) var(--space-4);
   gap: var(--space-3);
-  transition: border-color var(--transition-fast);
+  border-bottom: 1px solid var(--color-border);
+  transition: background-color var(--transition-fast);
+}
+
+.item:last-child {
+  border-bottom: none;
 }
 
 .item:hover {
-  border-color: var(--color-border-strong);
+  background-color: var(--color-bg-subtle);
 }
 
 .itemMain {
@@ -102,13 +108,13 @@
 .amountExpense {
   font-size: var(--text-sm);
   font-weight: 700;
-  color: #ef4444;
+  color: var(--color-negative);
 }
 
 .amountIncome {
   font-size: var(--text-sm);
   font-weight: 700;
-  color: #10b981;
+  color: var(--color-positive);
 }
 
 .actions {
@@ -133,8 +139,8 @@
 }
 
 .actionBtnDelete:hover {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+  background: var(--color-negative-light);
+  color: var(--color-negative);
 }
 
 /* Modal styles for editing */
@@ -222,15 +228,15 @@
 }
 
 .typeButtonExpenseActive {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-  border-color: #ef4444;
+  background: var(--color-negative-light);
+  color: var(--color-negative);
+  border-color: var(--color-negative);
 }
 
 .typeButtonIncomeActive {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
-  border-color: #10b981;
+  background: var(--color-positive-light);
+  color: var(--color-positive);
+  border-color: var(--color-positive);
 }
 
 .modalActions {
@@ -263,8 +269,8 @@
 }
 
 .errorMessage {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+  background: var(--color-negative-light);
+  color: var(--color-negative);
   padding: var(--space-2) var(--space-3);
   border-radius: 8px;
   font-size: var(--text-xs);
