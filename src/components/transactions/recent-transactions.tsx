@@ -136,11 +136,6 @@ export function RecentTransactions({
             const displayTitle = tx.description?.trim() || tx.categoryName;
             const emoji = getCategoryEmoji(tx.categoryIcon);
 
-            const txDate = tx.date instanceof Date ? tx.date : new Date(tx.date);
-            const dateFormatted = !isNaN(txDate.getTime())
-              ? txDate.toLocaleDateString("de-DE")
-              : "";
-
             return (
               <div key={tx.id} className={styles.item}>
                 <div className={styles.itemMain}>
@@ -151,7 +146,6 @@ export function RecentTransactions({
                     <span className={styles.description}>{displayTitle}</span>
                     <span className={styles.subtext}>
                       {tx.accountName} • {tx.categoryName}
-                      {dateFormatted ? ` • ${dateFormatted}` : ""}
                     </span>
                   </div>
                 </div>

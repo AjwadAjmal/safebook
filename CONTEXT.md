@@ -50,8 +50,11 @@ _Vermeiden_: Landing-Page, Konten-Setup
 ### Navigation
 
 **Sidebar-Navigation** (Navigation Drawer):
-Ein seitliches Overlay-Menü (Drawer), das über ein Menü-Icon in der Kopfzeile geöffnet wird und die primären Verlinkungen der Anwendung bereitstellt.
+Ein seitliches Overlay-Menü (Drawer), das über ein Menü-Icon in der Kopfzeile geöffnet wird und die primären Verlinkungen der Anwendung sowie den Haushaltsnamen bereitstellt.
 _Vermeiden_: Bottom Navigation, Tab-Bar
+
+**Kopfzeile** (Global Header):
+Die fixierte Leiste am oberen Bildschirmrand, die das Menü-Icon und den Namen der aktuell geöffneten Seite (z. B. "Dashboard", "Meine Konten", "Neue Transaktion") anzeigt.
 
 ### Kontenverwaltung (Account Management)
 
@@ -70,6 +73,9 @@ _Vermeiden_: Aktivität, Bewegung
 
 **Transaktionserfassung** (Transaction Entry):
 Der Vorgang des schnellen Erfassens einer neuen Transaktion über eine eigene Seite (z. B. `/transactions/new`), aufgerufen über den Quicklink-Button unter der Gesamtsaldo-Karte auf dem Dashboard.
+
+**Transaktionsliste** (Recent Transactions):
+Die zusammenhängende Listenansicht in einer gemeinsamen Karte im Dashboard, in der die letzten Transaktionen bündig ohne Zwischenabstände und mit dezenten Trennlinien dargestellt werden.
 
 **Kategorie** (Category):
 Eine logische Klassifizierung einer Transaktion (z. B. "Tanken", "Lebensmittel", "Gehalt"). Das System bietet vordefinierte Standardkategorien sowie die Möglichkeit, direkt bei der Erfassung eigene haushaltsspezifische Kategorien anzulegen.

@@ -3,19 +3,24 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { getPageTitleByPathname } from "@/lib/navigation-utils";
 import styles from "./sidebar-navigation.module.css";
 
 export interface SidebarNavigationProps {
   householdName: string;
   logoutAction?: () => Promise<void>;
+  pageTitle?: string;
 }
 
 export function SidebarNavigation({
   householdName,
   logoutAction,
+  pageTitle,
 }: SidebarNavigationProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+
+  const activeTitle = pageTitle || getPageTitleByPathname(pathname);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -63,7 +68,7 @@ export function SidebarNavigation({
               <line x1="3" y1="18" x2="21" y2="18" />
             </svg>
           </button>
-          <span className={styles.householdName}>{householdName}</span>
+          <span className={styles.pageTitle}>{activeTitle}</span>
         </div>
       </header>
 

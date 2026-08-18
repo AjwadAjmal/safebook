@@ -1,19 +1,50 @@
 import React from 'react'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, test, expect, vi } from 'vitest'
+import { describe, test, expect, vi, beforeEach } from 'vitest'
 import { SidebarNavigation } from './sidebar-navigation'
+import { usePathname } from 'next/navigation'
 
 vi.mock('next/navigation', () => ({
-  usePathname: () => '/',
+  usePathname: vi.fn(),
 }))
 
 describe('SidebarNavigation', () => {
-  test('renders top header bar with household name and hamburger menu button', () => {
+  beforeEach(() => {
+    vi.mocked(usePathname).mockReturnValue('/')
+  })
+
+  test('renders top header bar with active page title and hamburger menu button', () => {
     render(<SidebarNavigation householdName="Muster Household" />)
-    
-    expect(screen.getAllByText('Muster Household')[0]).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Menü öffnen' })).toBeInTheDocument()
+
+    const header = screen.getByRole('banner')
+    expect(within(header).getByText('Dashboard')).toBeInTheDocument()
+    expect(within(header).getByRole('button', { name: 'Menü öffnen' })).toBeInTheDocument()
+  })
+
+  test('renders dynamic page title based on current pathname (e.g. /accounts -> Meine Konten)', () => {
+    vi.mocked(usePathname).mockReturnValue('/accounts')
+    render(<SidebarNavigation householdName="Muster Household" />)
+
+    const header = screen.getByRole('banner')
+    expect(within(header).getByText('Meine Konten')).toBeInTheDocument()
+  })
+
+  test('renders explicit pageTitle prop when provided', () => {
+    render(<SidebarNavigation householdName="Muster Household" pageTitle="Spezialansicht" />)
+
+    const header = screen.getByRole('banner')
+    expect(within(header).getByText('Spezialansicht')).toBeInTheDocument()
+  })
+
+  test('renders household name inside the navigation drawer', async () => {
+    const user = userEvent.setup()
+    render(<SidebarNavigation householdName="Muster Household" />)
+
+    const menuButton = screen.getByRole('button', { name: 'Menü öffnen' })
+    await user.click(menuButton)
+
+    expect(screen.getByText('Muster Household')).toBeInTheDocument()
   })
 
   test('toggles drawer open and closed via hamburger button, backdrop, close button and Escape key', async () => {
@@ -87,6 +118,3 @@ describe('SidebarNavigation', () => {
     expect(logoutAction).toHaveBeenCalledTimes(1)
   })
 })
-
-
-

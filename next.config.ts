@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
 };
 
 module.exports = {
-  allowedDevOrigins: ['shine-junior-old-lifestyle.trycloudflare.com'],
+  allowedDevOrigins: ['embassy-arlington-scroll-alcohol.trycloudflare.com'],
 }
 
 export default nextConfig;
