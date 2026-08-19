@@ -101,9 +101,6 @@ export default async function Home() {
           <Link href="/login" className={styles.primary}>
             Anmelden
           </Link>
-          <Link href="/register" className={styles.secondary}>
-            Registrieren
-          </Link>
         </div>
       </main>
     </div>

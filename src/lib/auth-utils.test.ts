@@ -65,3 +65,25 @@ test("createUser should hash password and insert user", async () => {
   const isMatch = await bcrypt.compare("plainpassword", insertedUser.passwordHash);
   assert.ok(isMatch);
 });
+
+test("validateCredentials should return user with superadmin role if credentials are correct", async () => {
+  const passwordHash = await bcrypt.hash("superadminpass", 10);
+  const mockSuperadmin = {
+    id: "admin-1",
+    username: "superadmin",
+    passwordHash: passwordHash,
+    role: "superadmin" as const,
+    householdId: null,
+  };
+
+  const findUserByUsername = async (username: string) => {
+    if (username === "superadmin") return mockSuperadmin;
+    return null;
+  };
+
+  const user = await validateCredentials("superadmin", "superadminpass", findUserByUsername);
+  assert.ok(user);
+  assert.strictEqual(user?.username, "superadmin");
+  assert.strictEqual(user?.role, "superadmin");
+});
+

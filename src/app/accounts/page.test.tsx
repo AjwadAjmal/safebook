@@ -126,7 +126,7 @@ describe('Accounts Page (/accounts)', () => {
     expect(depotSubtotal.className).not.toContain('saldoPositive')
     expect(depotSubtotal.className).not.toContain('saldoNegative')
 
-    expect(screen.getByText('Kasse / Bargeld')).toBeInTheDocument()
+    expect(screen.getByText('Bargeldkonten')).toBeInTheDocument()
     const cashSubtotal = screen.getByText('200.00 €')
     expect(cashSubtotal).toBeInTheDocument()
     expect(cashSubtotal.className).not.toContain('saldoPositive')

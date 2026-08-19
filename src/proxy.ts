@@ -14,7 +14,7 @@ export const proxyLogic = async (req: AuthRequest, hasAccounts?: (userId: string
   const isLoggedin = !!req.auth;
   const { nextUrl } = req;
 
-  const isPublicRoute = ["/login", "/register"].includes(nextUrl.pathname);
+  const isPublicRoute = ["/login"].includes(nextUrl.pathname);
   const isApiAuthRoute = nextUrl.pathname.startsWith("/api/auth");
 
   if (isApiAuthRoute) return;

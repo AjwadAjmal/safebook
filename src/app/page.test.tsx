@@ -48,7 +48,7 @@ describe('Root Page (Home) - Landing vs Dashboard', () => {
     expect(screen.getByRole('heading', { name: 'Safebook' })).toBeInTheDocument()
     expect(screen.getByText(/Dein privates, datenschutzorientiertes Haushaltsbuch/i)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Anmelden' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Registrieren' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Registrieren' })).not.toBeInTheDocument()
   })
 
   it('renders dashboard when user is logged in and has a householdId', async () => {

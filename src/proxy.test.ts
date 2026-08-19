@@ -70,3 +70,15 @@ test("proxyLogic should NOT redirect to profile creation or household onboarding
   const res = await proxyLogic(req, hasAccounts);
   assert.strictEqual(res, undefined);
 });
+
+test("proxyLogic should redirect unauthenticated request on /register to /login", async () => {
+  const req = {
+    auth: null,
+    nextUrl: new URL("http://localhost:3000/register")
+  };
+
+  const res = await proxyLogic(req);
+  assert.ok(res instanceof Response);
+  assert.strictEqual(res.headers.get("Location"), "http://localhost:3000/login");
+});
+

@@ -22,12 +22,12 @@ describe('SidebarNavigation', () => {
     expect(within(header).getByRole('button', { name: 'Menü öffnen' })).toBeInTheDocument()
   })
 
-  test('renders dynamic page title based on current pathname (e.g. /accounts -> Meine Konten)', () => {
+  test('renders dynamic page title based on current pathname (e.g. /accounts -> Kontenübersicht)', () => {
     vi.mocked(usePathname).mockReturnValue('/accounts')
     render(<SidebarNavigation householdName="Muster Household" />)
 
     const header = screen.getByRole('banner')
-    expect(within(header).getByText('Meine Konten')).toBeInTheDocument()
+    expect(within(header).getByText('Kontenübersicht')).toBeInTheDocument()
   })
 
   test('renders explicit pageTitle prop when provided', () => {
@@ -87,7 +87,7 @@ describe('SidebarNavigation', () => {
     await user.click(menuButton)
 
     const dashboardLink = screen.getByRole('link', { name: 'Dashboard' })
-    const accountsLink = screen.getByRole('link', { name: 'Meine Konten' })
+    const accountsLink = screen.getByRole('link', { name: 'Kontenübersicht' })
     const newTxLink = screen.getByRole('link', { name: 'Neue Transaktion' })
 
     expect(dashboardLink).toHaveAttribute('href', '/')

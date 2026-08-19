@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
 };
 
 module.exports = {
-  allowedDevOrigins: ['embassy-arlington-scroll-alcohol.trycloudflare.com'],
+  allowedDevOrigins: ['qualifications-geology-sweet-thinking.trycloudflare.com'],
 }
 
 export default nextConfig;

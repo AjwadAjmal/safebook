@@ -80,11 +80,26 @@ Die zusammenhängende Listenansicht in einer gemeinsamen Karte im Dashboard, in 
 **Kategorie** (Category):
 Eine logische Klassifizierung einer Transaktion (z. B. "Tanken", "Lebensmittel", "Gehalt"). Das System bietet vordefinierte Standardkategorien sowie die Möglichkeit, direkt bei der Erfassung eigene haushaltsspezifische Kategorien anzulegen.
 
+### Benutzerverwaltung & Administration (User Management)
+
+**Benutzerverwaltung** (User Management):
+Der exklusive Administrationsbereich zur manuellen Neuanlage von Benutzerkonten und zur rückstandslosen Löschung von Benutzern und deren verwaisten Haushalten.
+_Vermeiden_: Registrierung, Nutzereinstellungen
+
+**Superadmin** (Dev / Systemadministrator):
+Eine übergeordnete Systemrolle, die berechtigt ist, neue Benutzerkonten zu erstellen und bestehende Benutzer sowie deren Daten aus dem System zu entfernen.
+_Vermeiden_: Haushalts-Admin (dieser verwaltet nur einen einzelnen Haushalt)
+
+**Rückstandslose Bereinigung** (Clean Deletion):
+Der vollständige Löschvorgang, der bei Entfernung eines Benutzers alle mit ihm verknüpften Konten, Transaktionen und bei alleiniger Haushaltszugehörigkeit auch den gesamten Haushalt mitsamt dessen Kategorien aus der Datenbank tilgt.
+
 ## Beziehungen
 
 
 - Die **Profilerstellung** erzeugt ein Benutzerprofil mit initialen Konten (**Girokonto**, **Aktiendepot**, **Kasse**), welche über das **Profile-Creation-Modal** im **Local Staging** gesammelt werden.
 - Nach erfolgreicher **Profilerstellung** führt das **Haushalts-Onboarding** den Benutzer dazu, einen **Haushalt** zu erstellen oder einem beizutreten.
+- Ein **Superadmin** erstellt neue Benutzerkonten in der **Benutzerverwaltung**, woraufhin der Benutzer nach dem ersten Login die **Profilerstellung** und das **Haushalts-Onboarding** durchläuft.
+- Die **Rückstandslose Bereinigung** entfernt einen Benutzer, seine Konten und Transaktionen; verbleiben keine weiteren Mitglieder im Haushalt, wird der gesamte **Haushalt** mitsamt Kategorien gelöscht.
 
 ## Beispieldialog
 
@@ -94,4 +109,6 @@ Eine logische Klassifizierung einer Transaktion (z. B. "Tanken", "Lebensmittel",
 ## Markierte Mehrdeutigkeiten
 
 - "Onboarding" wurde fälschlicherweise sowohl für die Profilerstellung (Konto-Initialisierung) als auch für das Haushalts-Setup verwendet — gelöst: die Phasen sind nun strikt getrennt in **Profilerstellung** (Profile Creation) und **Haushalts-Onboarding** (Household Onboarding).
+- "Admin" bezog sich zuvor nur auf den Verwalter eines Haushalts — geschärft: Es gibt nun den **Haushalts-Admin** (lokal für einen Haushalt) und den **Superadmin** (systemweit zur Benutzerverwaltung).
+
 

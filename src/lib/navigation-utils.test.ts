@@ -6,9 +6,9 @@ test('getPageTitleByPathname should return "Dashboard" for the root path "/"', (
   assert.strictEqual(getPageTitleByPathname('/'), 'Dashboard');
 });
 
-test('getPageTitleByPathname should return "Meine Konten" for "/accounts"', () => {
-  assert.strictEqual(getPageTitleByPathname('/accounts'), 'Meine Konten');
-  assert.strictEqual(getPageTitleByPathname('/accounts/'), 'Meine Konten');
+test('getPageTitleByPathname should return "Kontenübersicht" for "/accounts"', () => {
+  assert.strictEqual(getPageTitleByPathname('/accounts'), 'Kontenübersicht');
+  assert.strictEqual(getPageTitleByPathname('/accounts/'), 'Kontenübersicht');
 });
 
 test('getPageTitleByPathname should return "Neue Transaktion" for "/transactions/new"', () => {

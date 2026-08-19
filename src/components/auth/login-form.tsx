@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { useSearchParams, usePathname } from "next/navigation";
 import { loginAction } from "@/lib/actions/auth";
 import { Toast } from "@/components/ui/toast";
@@ -78,9 +77,7 @@ export function LoginForm() {
           {isLoading ? "Wird angemeldet..." : "Anmelden"}
         </button>
       </form>
-      <div className={styles.footer}>
-        Noch kein Konto? <Link href="/register">Registrieren</Link>
-      </div>
     </div>
   );
 }
+

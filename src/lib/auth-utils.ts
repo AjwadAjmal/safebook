@@ -7,9 +7,10 @@ export interface User {
   id: string;
   username: string;
   passwordHash: string;
-  role: "admin" | "member";
+  role: "superadmin" | "admin" | "member";
   householdId: string | null;
 }
+
 
 export async function findUserByUsername(username: string): Promise<User | null> {
   const [user] = await db.select().from(users).where(eq(users.username, username));

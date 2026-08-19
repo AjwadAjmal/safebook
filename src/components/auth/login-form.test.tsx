@@ -54,4 +54,12 @@ describe('LoginForm - Success Toast Behavior', () => {
     // Check that replaceState was called to remove the query parameter
     expect(mockReplaceState).toHaveBeenCalledWith(null, '', '/login')
   })
+
+  it('does not render a registration link or footer link to /register', () => {
+    render(<LoginForm />)
+
+    expect(screen.queryByRole('link', { name: /registrieren/i })).not.toBeInTheDocument()
+    expect(screen.queryByText(/noch kein konto/i)).not.toBeInTheDocument()
+  })
 })
+
