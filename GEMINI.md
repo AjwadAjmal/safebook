@@ -36,5 +36,5 @@ Du programmierst defensiv, sauber und modular (DRY-Prinzip).
 
 * **Architektur & UI-Vorgaben:** Halte dich strikt an die Design-Philosophie (Mobile-First), CSS-Regeln (z.B. tabular-nums) und Datenbank-Vorgaben (3NF, Drizzle ORM) in `docs/memory-bank/.techContext.md` und `docs/memory-bank/.systemPatterns.md`.
 * **Sprachregelung:** Code, Variablen und Commits werden auf **Englisch** verfasst. Dokumentationen und UI-Texte auf **Deutsch**.
-* **Datenbank-Schema:** Bei Änderungen am Drizzle-Schema kann auf explizite Unit-Tests für die Tabellen-Definition verzichtet werden, da `drizzle-kit` die strukturelle Validierung übernimmt.
+* **Datenbank-Schema:** Bei Änderungen am Drizzle-Schema kann auf explizite Unit-Tests für die Tabellen-Definition verzichtet werden, da `drizzle-kit` die strukturelle Validierung übernimmt. Bei jeder Änderung des Datenbankschemas muss sicher gestellt werden, dass diese erfolgreich migriert worden ist.
 ---

@@ -2,7 +2,12 @@
 
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
-import { createManagedUser, type CreateManagedUserResponse } from "@/lib/admin-db";
+import {
+  createManagedUser,
+  deleteUserCleanly,
+  type CreateManagedUserResponse,
+  type DeleteUserResult,
+} from "@/lib/admin-db";
 import { type CreateManagedUserInput } from "@/lib/validations/admin";
 
 export type CreateManagedUserActionInput =
@@ -66,3 +71,55 @@ export async function createManagedUserAction(
     user: result.user,
   };
 }
+
+export async function deleteUserAction(
+  targetUserId: string,
+  _deps = {
+    getCurrentUser: async () => {
+      const session = await auth();
+      return session?.user;
+    },
+    deleteUserCleanly: async (
+      targetUserId: string,
+      executorUserId: string
+    ): Promise<DeleteUserResult> => {
+      return await deleteUserCleanly(targetUserId, executorUserId);
+    },
+  }
+): Promise<DeleteUserResult> {
+  const currentUser = await _deps.getCurrentUser();
+
+  if (!currentUser || currentUser.role !== "superadmin") {
+    return {
+      success: false,
+      error: "Nicht autorisiert.",
+    };
+  }
+
+  if (!targetUserId) {
+    return {
+      success: false,
+      error: "Ungültige Benutzer-ID.",
+    };
+  }
+
+  const result = await _deps.deleteUserCleanly(targetUserId, currentUser.id);
+
+  if (!result.success) {
+    return {
+      success: false,
+      error: result.error,
+    };
+  }
+
+  try {
+    revalidatePath("/admin");
+  } catch {
+    // Ignore in non-Next runtime / unit tests
+  }
+
+  return {
+    success: true,
+  };
+}
+

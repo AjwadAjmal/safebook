@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert";
-import { createManagedUserAction } from "./admin";
+import { createManagedUserAction, deleteUserAction } from "./admin";
 
 test("createManagedUserAction should reject unauthenticated user", async () => {
   const deps = {
@@ -164,4 +164,87 @@ test("createManagedUserAction should return error if createManagedUser fails", a
     assert.strictEqual(result.error, "Benutzername ist bereits vergeben.");
   }
 });
+
+test("deleteUserAction should reject unauthenticated caller", async () => {
+  const deps = {
+    getCurrentUser: async () => null,
+    deleteUserCleanly: async () => {
+      throw new Error("Should not be called");
+    },
+  };
+
+  const result = await deleteUserAction("user-to-delete", deps);
+
+  assert.strictEqual(result.success, false);
+  assert.strictEqual(result.error, "Nicht autorisiert.");
+});
+
+test("deleteUserAction should reject non-superadmin caller", async () => {
+  const deps = {
+    getCurrentUser: async () => ({
+      id: "admin-id",
+      username: "adminuser",
+      role: "admin" as const,
+      householdId: "h-1",
+    }),
+    deleteUserCleanly: async () => {
+      throw new Error("Should not be called");
+    },
+  };
+
+  const result = await deleteUserAction("user-to-delete", deps);
+
+  assert.strictEqual(result.success, false);
+  assert.strictEqual(result.error, "Nicht autorisiert.");
+});
+
+test("deleteUserAction should invoke deleteUserCleanly with targetUserId and executorUserId for superadmin", async () => {
+  let passedTargetId = "";
+  let passedExecutorId = "";
+
+  const deps = {
+    getCurrentUser: async () => ({
+      id: "superadmin-id",
+      username: "dev",
+      role: "superadmin" as const,
+      householdId: null,
+    }),
+    deleteUserCleanly: async (targetUserId: string, executorUserId: string) => {
+      passedTargetId = targetUserId;
+      passedExecutorId = executorUserId;
+      return { success: true as const };
+    },
+  };
+
+  const result = await deleteUserAction("target-user-123", deps);
+
+  assert.strictEqual(result.success, true);
+  assert.strictEqual(passedTargetId, "target-user-123");
+  assert.strictEqual(passedExecutorId, "superadmin-id");
+});
+
+test("deleteUserAction should return error if deleteUserCleanly returns error", async () => {
+  const deps = {
+    getCurrentUser: async () => ({
+      id: "superadmin-id",
+      username: "dev",
+      role: "superadmin" as const,
+      householdId: null,
+    }),
+    deleteUserCleanly: async () => {
+      return {
+        success: false as const,
+        error: "Selbstlöschung ist nicht erlaubt.",
+      };
+    },
+  };
+
+  const result = await deleteUserAction("superadmin-id", deps);
+
+  assert.strictEqual(result.success, false);
+  if (!result.success) {
+    assert.strictEqual(result.error, "Selbstlöschung ist nicht erlaubt.");
+  }
+});
+
 
