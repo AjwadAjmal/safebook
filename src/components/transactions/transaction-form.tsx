@@ -142,7 +142,7 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
                 Zurück
               </button>
             ) : (
-              <h1 className={styles.title}>Neue Transaktion</h1>
+              <span className={styles.headerSpacer} aria-hidden="true" />
             )}
             <span className={styles.stepIndicator}>Schritt {currentStep} von 4</span>
             <Link href="/" className={styles.cancelLink}>

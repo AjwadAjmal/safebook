@@ -18,12 +18,13 @@ describe("TransactionForm (Multi-Step Wizard - Slice 2)", () => {
     { id: "cat-2", name: "Tanken", icon: "gas-pump", isSystem: true, householdId: null },
   ];
 
-  it("renders wizard header with 'Schritt 1 von 4', 'Abbrechen' link, and no 'Zurück' button on step 1", () => {
+  it("renders wizard header with 'Schritt 1 von 4', 'Abbrechen' link, no 'Zurück' button on step 1, and no redundant 'Neue Transaktion' heading", () => {
     render(<TransactionForm accounts={mockAccounts} categories={mockCategories} />);
 
     expect(screen.getByText("Schritt 1 von 4")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Abbrechen" })).toHaveAttribute("href", "/");
     expect(screen.queryByRole("button", { name: "Zurück" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Neue Transaktion" })).not.toBeInTheDocument();
   });
 
   it("renders stacked account tiles with name, type badge, and balance, with no default selection and disabled Weiter button", () => {

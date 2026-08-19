@@ -1,34 +1,29 @@
 .formContainer {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-5);
   width: 100%;
   max-width: 430px;
   margin: 0 auto;
-  padding: var(--space-5);
-  background: var(--color-bg-surface);
-  border-radius: 16px;
-  border: 1px solid var(--color-border);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
 }
 
 .headerContainer {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  width: 100%;
 }
 
 .progressRow {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  min-height: 24px;
 }
 
-.title {
-  font-size: var(--text-base);
-  font-weight: 700;
-  color: var(--color-text-primary);
-  margin: 0;
+.headerSpacer {
+  min-width: 48px;
+  visibility: hidden;
 }
 
 .backButton {
@@ -39,6 +34,8 @@
   color: var(--color-accent-primary);
   cursor: pointer;
   padding: 0;
+  min-width: 48px;
+  text-align: left;
 }
 
 .backButton:hover {
@@ -59,6 +56,8 @@
   text-decoration: none;
   font-weight: 500;
   transition: color var(--transition-fast);
+  min-width: 48px;
+  text-align: right;
 }
 
 .cancelLink:hover {
@@ -107,7 +106,7 @@
   gap: var(--space-2);
   width: 100%;
   padding: var(--space-4);
-  background: var(--color-bg-base);
+  background: var(--color-bg-surface);
   border: 2px solid var(--color-border);
   border-radius: 12px;
   text-align: left;
@@ -193,7 +192,7 @@
   justify-content: center;
   align-items: center;
   padding: var(--space-5);
-  background: var(--color-bg-base);
+  background: var(--color-bg-surface);
   border: 1px solid var(--color-border);
   border-radius: 14px;
 }
@@ -227,7 +226,7 @@
   font-weight: 700;
   border-radius: 10px;
   border: 1px solid var(--color-border);
-  background: var(--color-bg-base);
+  background: var(--color-bg-surface);
   color: var(--color-text-primary);
   cursor: pointer;
   transition: background var(--transition-fast);
@@ -284,7 +283,7 @@
   padding: var(--space-3);
   border-radius: 10px;
   border: 1px solid var(--color-border);
-  background: var(--color-bg-base);
+  background: var(--color-bg-surface);
   color: var(--color-text-primary);
   font-size: var(--text-base);
   transition: border-color var(--transition-fast);
@@ -329,7 +328,7 @@
   justify-content: center;
   gap: var(--space-1);
   padding: var(--space-3) var(--space-2);
-  background: var(--color-bg-base);
+  background: var(--color-bg-surface);
   border: 2px solid var(--color-border);
   border-radius: 12px;
   cursor: pointer;
@@ -367,7 +366,7 @@
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-4);
-  background: var(--color-bg-base);
+  background: var(--color-bg-surface);
   border-radius: 14px;
   border: 1px solid var(--color-border);
 }
