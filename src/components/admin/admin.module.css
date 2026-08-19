@@ -1,0 +1,294 @@
+.adminContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 430px;
+  margin: 0 auto;
+  gap: var(--space-5);
+  animation: fadeIn var(--transition-slow);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+}
+
+.cardTitle {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.input {
+  width: 100%;
+  padding: var(--space-3);
+  background: var(--color-bg-input, var(--color-bg-page));
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.input:focus {
+  border-color: var(--color-primary);
+}
+
+.inputError {
+  border-color: var(--color-negative);
+}
+
+.fieldError {
+  font-size: var(--text-xs);
+  color: var(--color-negative);
+  margin-top: 2px;
+}
+
+.submitButton {
+  margin-top: var(--space-2);
+  width: 100%;
+  padding: var(--space-3);
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 600;
+  font-size: var(--text-sm);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  transition: opacity var(--transition-fast);
+}
+
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.userList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.userCard {
+  background: var(--color-bg-page);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.userHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.userTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.username {
+  font-weight: 700;
+  font-size: var(--text-base);
+  color: var(--color-text-primary);
+}
+
+.roleBadge {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  text-transform: capitalize;
+}
+
+.roleSuperadmin {
+  background: rgba(147, 51, 234, 0.12);
+  color: #9333ea;
+  border: 1px solid rgba(147, 51, 234, 0.3);
+}
+
+.roleAdmin {
+  background: rgba(59, 130, 246, 0.12);
+  color: #3b82f6;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.roleMember {
+  background: rgba(107, 114, 128, 0.12);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.userDetails {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+}
+
+.userMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.deleteButton {
+  background: transparent;
+  border: 1px solid var(--color-negative);
+  color: var(--color-negative);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.deleteButton:hover:not(:disabled) {
+  background: var(--color-negative);
+  color: #fff;
+}
+
+.deleteButton:disabled {
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.emptyUsers {
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  padding: var(--space-4);
+}
+
+/* Modal styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  z-index: 100;
+  animation: fadeIn var(--transition-fast);
+}
+
+.modalContent {
+  background: var(--color-bg-surface);
+  border-radius: 16px;
+  padding: var(--space-5);
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modalTitle {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.modalWarningText {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.modalActions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: flex-end;
+  margin-top: var(--space-2);
+}
+
+.cancelBtn {
+  padding: var(--space-2) var(--space-4);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  color: var(--color-text-primary);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.confirmDeleteBtn {
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-negative);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-weight: 600;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.confirmDeleteBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
