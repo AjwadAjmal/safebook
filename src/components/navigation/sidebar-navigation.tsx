@@ -10,12 +10,14 @@ export interface SidebarNavigationProps {
   householdName: string;
   logoutAction?: () => Promise<void>;
   pageTitle?: string;
+  role?: "superadmin" | "admin" | "member";
 }
 
 export function SidebarNavigation({
   householdName,
   logoutAction,
   pageTitle,
+  role,
 }: SidebarNavigationProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
@@ -39,6 +41,9 @@ export function SidebarNavigation({
     { href: "/", label: "Dashboard" },
     { href: "/accounts", label: "Kontenübersicht" },
     { href: "/transactions/new", label: "Neue Transaktion" },
+    ...(role === "superadmin"
+      ? [{ href: "/admin", label: "Benutzerverwaltung" }]
+      : []),
   ];
 
   return (

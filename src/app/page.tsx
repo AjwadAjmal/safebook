@@ -54,6 +54,7 @@ export default async function Home() {
           <SidebarNavigation
             householdName={household.name}
             logoutAction={handleLogout}
+            role={session.user.role}
           />
           <div className="pageContainer" style={{ paddingTop: "var(--space-6)" }}>
             <div className={styles.dashboard}>

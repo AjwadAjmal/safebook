@@ -117,4 +117,59 @@ describe('SidebarNavigation', () => {
     await user.click(logoutButton)
     expect(logoutAction).toHaveBeenCalledTimes(1)
   })
+
+  test('renders "Benutzerverwaltung" link when role is "superadmin"', async () => {
+    const user = userEvent.setup()
+    render(<SidebarNavigation householdName="Muster Household" role="superadmin" />)
+
+    const menuButton = screen.getByRole('button', { name: 'Menü öffnen' })
+    await user.click(menuButton)
+
+    const adminLink = screen.getByRole('link', { name: 'Benutzerverwaltung' })
+    expect(adminLink).toBeInTheDocument()
+    expect(adminLink).toHaveAttribute('href', '/admin')
+  })
+
+  test('does not render "Benutzerverwaltung" link for "admin", "member", or undefined role', async () => {
+    const user = userEvent.setup()
+
+    // When role is member
+    const { unmount: unmountMember } = render(
+      <SidebarNavigation householdName="Muster Household" role="member" />
+    )
+    const menuButtonMember = screen.getByRole('button', { name: 'Menü öffnen' })
+    await user.click(menuButtonMember)
+    expect(screen.queryByRole('link', { name: 'Benutzerverwaltung' })).not.toBeInTheDocument()
+    unmountMember()
+
+    // When role is admin
+    const { unmount: unmountAdmin } = render(
+      <SidebarNavigation householdName="Muster Household" role="admin" />
+    )
+    const menuButtonAdmin = screen.getByRole('button', { name: 'Menü öffnen' })
+    await user.click(menuButtonAdmin)
+    expect(screen.queryByRole('link', { name: 'Benutzerverwaltung' })).not.toBeInTheDocument()
+    unmountAdmin()
+
+    // When role is undefined / not provided
+    render(<SidebarNavigation householdName="Muster Household" />)
+    const menuButtonDefault = screen.getByRole('button', { name: 'Menü öffnen' })
+    await user.click(menuButtonDefault)
+    expect(screen.queryByRole('link', { name: 'Benutzerverwaltung' })).not.toBeInTheDocument()
+  })
+
+  test('highlights "Benutzerverwaltung" link as active on /admin and closes drawer when clicked', async () => {
+    vi.mocked(usePathname).mockReturnValue('/admin')
+    const user = userEvent.setup()
+    render(<SidebarNavigation householdName="Muster Household" role="superadmin" />)
+
+    const menuButton = screen.getByRole('button', { name: 'Menü öffnen' })
+    await user.click(menuButton)
+
+    const adminLink = screen.getByRole('link', { name: 'Benutzerverwaltung' })
+    expect(adminLink.className).toContain('activeLink')
+
+    await user.click(adminLink)
+    expect(menuButton).toHaveAttribute('aria-expanded', 'false')
+  })
 })

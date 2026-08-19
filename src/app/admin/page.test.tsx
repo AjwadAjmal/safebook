@@ -76,7 +76,7 @@ describe('Admin Page Server Component (/admin)', () => {
     const jsx = await AdminPage()
     render(jsx!)
 
-    expect(screen.getByText('Benutzerverwaltung')).toBeInTheDocument()
+    expect(screen.getAllByText('Benutzerverwaltung').length).toBeGreaterThan(0)
     expect(screen.getByText('Neuen Benutzer anlegen')).toBeInTheDocument()
     expect(screen.getByText('Registrierte Benutzer')).toBeInTheDocument()
   })

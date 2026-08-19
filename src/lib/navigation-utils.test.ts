@@ -16,6 +16,11 @@ test('getPageTitleByPathname should return "Neue Transaktion" for "/transactions
   assert.strictEqual(getPageTitleByPathname('/transactions/new/'), 'Neue Transaktion');
 });
 
+test('getPageTitleByPathname should return "Benutzerverwaltung" for "/admin"', () => {
+  assert.strictEqual(getPageTitleByPathname('/admin'), 'Benutzerverwaltung');
+  assert.strictEqual(getPageTitleByPathname('/admin/'), 'Benutzerverwaltung');
+});
+
 test('getPageTitleByPathname should return fallback "Dashboard" for unknown routes, null, undefined, and empty string', () => {
   assert.strictEqual(getPageTitleByPathname('/unknown-route'), 'Dashboard');
   assert.strictEqual(getPageTitleByPathname(null), 'Dashboard');

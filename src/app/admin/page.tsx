@@ -35,6 +35,7 @@ export default async function AdminPage() {
         householdName={household?.name || "Administration"}
         logoutAction={handleLogout}
         pageTitle="Benutzerverwaltung"
+        role={session.user.role}
       />
       <div className="pageContainer" style={{ paddingTop: "var(--space-6)" }}>
         <AdminView users={users} currentUserId={session.user.id} />
