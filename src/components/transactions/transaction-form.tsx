@@ -71,6 +71,9 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
   const [categoryId, setCategoryId] = useState<string>("");
   const [description, setDescription] = useState<string>("");
 
+  // Edit from summary state
+  const [isEditing, setIsEditing] = useState(false);
+
   // Category Modal state
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
 
@@ -347,7 +350,10 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
                   type="button"
                   aria-label="Konto bearbeiten"
                   className={styles.editStepBtn}
-                  onClick={() => setCurrentStep(1)}
+                  onClick={() => {
+                    setCurrentStep(1);
+                    setIsEditing(true);
+                  }}
                 >
                   ✏️
                 </button>
@@ -364,7 +370,10 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
                   type="button"
                   aria-label="Betrag bearbeiten"
                   className={styles.editStepBtn}
-                  onClick={() => setCurrentStep(2)}
+                  onClick={() => {
+                    setCurrentStep(2);
+                    setIsEditing(true);
+                  }}
                 >
                   ✏️
                 </button>
@@ -381,7 +390,10 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
                   type="button"
                   aria-label="Kategorie bearbeiten"
                   className={styles.editStepBtn}
-                  onClick={() => setCurrentStep(3)}
+                  onClick={() => {
+                    setCurrentStep(3);
+                    setIsEditing(true);
+                  }}
                 >
                   ✏️
                 </button>
@@ -411,7 +423,10 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
               <button
                 type="button"
                 className={styles.secondaryBtn}
-                onClick={() => setCurrentStep((prev) => (prev - 1) as 1 | 2 | 3 | 4)}
+                onClick={() => {
+                  setIsEditing(false);
+                  setCurrentStep((prev) => (prev - 1) as 1 | 2 | 3 | 4);
+                }}
               >
                 Zurück
               </button>
@@ -424,6 +439,18 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
                 disabled={isSubmitting}
               >
                 {isSubmitting ? "Wird gespeichert..." : "Transaktion speichern"}
+              </button>
+            ) : isEditing ? (
+              <button
+                type="button"
+                className={styles.primaryBtn}
+                disabled={!isCurrentStepValid()}
+                onClick={() => {
+                  setCurrentStep(4);
+                  setIsEditing(false);
+                }}
+              >
+                Zur Zusammenfassung
               </button>
             ) : (
               <button
