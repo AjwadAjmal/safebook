@@ -2,11 +2,17 @@ import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import NewTransactionPage from "./page";
 import { auth } from "@/auth";
+import { getHouseholdById } from "@/lib/household-utils";
 import { getAccountsByHouseholdId } from "@/lib/account-db";
 import { getCategoriesForHousehold, seedStandardCategories } from "@/lib/category-db";
 
 vi.mock("@/auth", () => ({
   auth: vi.fn(),
+  signOut: vi.fn(),
+}));
+
+vi.mock("@/lib/household-utils", () => ({
+  getHouseholdById: vi.fn(),
 }));
 
 vi.mock("@/lib/account-db", () => ({
@@ -22,6 +28,7 @@ vi.mock("next/navigation", () => ({
   redirect: vi.fn((url: string) => {
     throw new Error(`NEXT_REDIRECT: ${url}`);
   }),
+  usePathname: vi.fn(() => "/transactions/new"),
 }));
 
 describe("NewTransactionPage", () => {
@@ -35,10 +42,27 @@ describe("NewTransactionPage", () => {
     await expect(NewTransactionPage()).rejects.toThrow("NEXT_REDIRECT: /login");
   });
 
+  it("redirects to /login if household cannot be found", async () => {
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "u-1", householdId: "hh-1", role: "member" },
+      expires: "2026-08-09",
+    });
+    vi.mocked(getHouseholdById).mockResolvedValue(null);
+
+    await expect(NewTransactionPage()).rejects.toThrow("NEXT_REDIRECT: /login");
+  });
+
   it("redirects to /createprofile if household has no accounts", async () => {
     vi.mocked(auth).mockResolvedValue({
-      user: { id: "u-1", householdId: "hh-1" },
+      user: { id: "u-1", householdId: "hh-1", role: "member" },
       expires: "2026-08-09",
+    });
+    vi.mocked(getHouseholdById).mockResolvedValue({
+      id: "hh-1",
+      name: "Haushalt Schmidt",
+      inviteCode: "INV123",
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
     vi.mocked(getAccountsByHouseholdId).mockResolvedValue([]);
     vi.mocked(getCategoriesForHousehold).mockResolvedValue([]);
@@ -46,10 +70,18 @@ describe("NewTransactionPage", () => {
     await expect(NewTransactionPage()).rejects.toThrow("NEXT_REDIRECT: /createprofile");
   });
 
-  it("renders transaction form when user is authenticated with accounts and categories", async () => {
+  it("renders SidebarNavigation and transaction form when user is authenticated with accounts and categories", async () => {
     vi.mocked(auth).mockResolvedValue({
-      user: { id: "u-1", householdId: "hh-1" },
+      user: { id: "u-1", householdId: "hh-1", role: "member" },
       expires: "2026-08-09",
+    });
+
+    vi.mocked(getHouseholdById).mockResolvedValue({
+      id: "hh-1",
+      name: "Haushalt Schmidt",
+      inviteCode: "INV123",
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
 
     vi.mocked(getAccountsByHouseholdId).mockResolvedValue([
@@ -83,7 +115,12 @@ describe("NewTransactionPage", () => {
     const jsx = await NewTransactionPage();
     render(jsx);
 
-    expect(screen.getByText("Neue Transaktion")).toBeInTheDocument();
+    // Verify SidebarNavigation integration
+    expect(screen.getAllByText("Haushalt Schmidt").length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: "Menü öffnen" })).toBeInTheDocument();
+    expect(screen.getAllByText("Neue Transaktion").length).toBeGreaterThan(0);
+
+    // Verify TransactionForm contents
     expect(screen.getByText(/Girokonto Main/i)).toBeInTheDocument();
     expect(screen.getByText("Schritt 1 von 4")).toBeInTheDocument();
     expect(seedStandardCategories).toHaveBeenCalled();

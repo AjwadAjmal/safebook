@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { auth, signOut } from "@/auth";
+import { getHouseholdById } from "@/lib/household-utils";
 import { getAccountsByHouseholdId } from "@/lib/account-db";
 import {
   getCategoriesForHousehold,
   seedStandardCategories,
 } from "@/lib/category-db";
+import { SidebarNavigation } from "@/components/navigation/sidebar-navigation";
 import { TransactionForm } from "@/components/transactions/transaction-form";
 
 export default async function NewTransactionPage() {
@@ -15,6 +17,11 @@ export default async function NewTransactionPage() {
   }
 
   const householdId = session.user.householdId;
+  const household = await getHouseholdById(householdId);
+
+  if (!household) {
+    redirect("/login");
+  }
 
   // Seed default system categories if needed
   await seedStandardCategories();
@@ -41,12 +48,24 @@ export default async function NewTransactionPage() {
     householdId: cat.householdId,
   }));
 
+  const handleLogout = async () => {
+    "use server";
+    await signOut({ redirectTo: "/login" });
+  };
+
   return (
-    <div className="pageContainer" style={{ paddingTop: "var(--space-6)" }}>
-      <TransactionForm
-        accounts={mappedAccounts}
-        categories={mappedCategories}
+    <>
+      <SidebarNavigation
+        householdName={household.name}
+        logoutAction={handleLogout}
+        role={session.user.role}
       />
-    </div>
+      <div className="pageContainer" style={{ paddingTop: "var(--space-6)" }}>
+        <TransactionForm
+          accounts={mappedAccounts}
+          categories={mappedCategories}
+        />
+      </div>
+    </>
   );
 }
