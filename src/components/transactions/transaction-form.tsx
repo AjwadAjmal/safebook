@@ -127,28 +127,25 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
   const selectedAccount = accounts.find((a) => a.id === accountId);
   const selectedCategory = categories.find((c) => c.id === categoryId);
 
+  const isCurrentStepValid = () => {
+    switch (currentStep) {
+      case 1:
+        return isAccountStepValid(accountId);
+      case 2:
+        return isAmountStepValid(centAmount);
+      case 3:
+        return isCategoryStepValid(categoryId);
+      case 4:
+        return true;
+    }
+  };
+
   return (
     <>
       <form className={styles.formContainer} onSubmit={handleSubmit}>
         {/* Wizard Progress Header */}
-        <div className={styles.headerContainer}>
-          <div className={styles.progressRow}>
-            {currentStep > 1 ? (
-              <button
-                type="button"
-                className={styles.backButton}
-                onClick={() => setCurrentStep((prev) => (prev - 1) as 1 | 2 | 3 | 4)}
-              >
-                Zurück
-              </button>
-            ) : (
-              <span className={styles.headerSpacer} aria-hidden="true" />
-            )}
-            <span className={styles.stepIndicator}>Schritt {currentStep} von 4</span>
-            <Link href="/" className={styles.cancelLink}>
-              Abbrechen
-            </Link>
-          </div>
+        <div className={styles.headerContainer} data-wizard-header>
+          <span className={styles.stepIndicator}>Schritt {currentStep} von 4</span>
           <div className={styles.progressBarTrack}>
             <div
               className={styles.progressBarFill}
@@ -187,15 +184,6 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
                 );
               })}
             </div>
-
-            <button
-              type="button"
-              className={styles.primaryBtn}
-              disabled={!isAccountStepValid(accountId)}
-              onClick={() => setCurrentStep(2)}
-            >
-              Weiter
-            </button>
           </div>
         )}
 
@@ -280,15 +268,6 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
                 ⌫
               </button>
             </div>
-
-            <button
-              type="button"
-              className={styles.primaryBtn}
-              disabled={!isAmountStepValid(centAmount)}
-              onClick={() => setCurrentStep(3)}
-            >
-              Weiter
-            </button>
           </div>
         )}
 
@@ -350,15 +329,6 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
                 })}
               </div>
             </div>
-
-            <button
-              type="button"
-              className={styles.primaryBtn}
-              disabled={!isCategoryStepValid(categoryId)}
-              onClick={() => setCurrentStep(4)}
-            >
-              Weiter
-            </button>
           </div>
         )}
 
@@ -431,16 +401,46 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
                 onChange={(e) => setDescription(e.target.value)}
               />
             </div>
-
-            <button
-              type="submit"
-              className={styles.submitButton}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Wird gespeichert..." : "Transaktion speichern"}
-            </button>
           </div>
         )}
+
+        {/* Unified Bottom Action Bar */}
+        <div className={styles.actionBar}>
+          <div className={styles.buttonRow}>
+            {currentStep > 1 && (
+              <button
+                type="button"
+                className={styles.secondaryBtn}
+                onClick={() => setCurrentStep((prev) => (prev - 1) as 1 | 2 | 3 | 4)}
+              >
+                Zurück
+              </button>
+            )}
+
+            {currentStep === 4 ? (
+              <button
+                type="submit"
+                className={styles.primaryBtn}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Wird gespeichert..." : "Transaktion speichern"}
+              </button>
+            ) : (
+              <button
+                type="button"
+                className={styles.primaryBtn}
+                disabled={!isCurrentStepValid()}
+                onClick={() => setCurrentStep((prev) => (prev + 1) as 1 | 2 | 3 | 4)}
+              >
+                Weiter
+              </button>
+            )}
+          </div>
+
+          <Link href="/" className={styles.cancelLink}>
+            Abbrechen
+          </Link>
+        </div>
       </form>
 
       <CategoryModal

@@ -14,54 +14,12 @@
   width: 100%;
 }
 
-.progressRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  min-height: 24px;
-}
-
-.headerSpacer {
-  min-width: 48px;
-  visibility: hidden;
-}
-
-.backButton {
-  background: transparent;
-  border: none;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--color-accent-primary);
-  cursor: pointer;
-  padding: 0;
-  min-width: 48px;
-  text-align: left;
-}
-
-.backButton:hover {
-  text-decoration: underline;
-}
-
 .stepIndicator {
   font-size: var(--text-xs);
   font-weight: 700;
   color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-}
-
-.cancelLink {
-  font-size: var(--text-sm);
-  color: var(--color-text-secondary);
-  text-decoration: none;
-  font-weight: 500;
-  transition: color var(--transition-fast);
-  min-width: 48px;
-  text-align: right;
-}
-
-.cancelLink:hover {
-  color: var(--color-text-primary);
 }
 
 .progressBarTrack {
@@ -241,7 +199,26 @@
   font-size: var(--text-lg);
 }
 
-/* Buttons */
+/* Buttons & Action Bar */
+.actionBar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  margin-top: var(--space-2);
+}
+
+.buttonRow {
+  display: flex;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.buttonRow > button {
+  flex: 1;
+}
+
 .primaryBtn, .submitButton {
   width: 100%;
   padding: var(--space-3) var(--space-4);
@@ -262,6 +239,37 @@
 .primaryBtn:disabled, .submitButton:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.secondaryBtn {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg-subtle);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  font-size: var(--text-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.secondaryBtn:hover {
+  background: var(--color-border);
+}
+
+.cancelLink {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  text-align: center;
+  transition: color var(--transition-fast);
+}
+
+.cancelLink:hover {
+  color: var(--color-text-primary);
+  text-decoration: underline;
 }
 
 .formGroup {

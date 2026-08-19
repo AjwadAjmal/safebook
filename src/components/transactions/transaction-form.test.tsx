@@ -7,7 +7,7 @@ vi.mock("@/lib/actions/transaction", () => ({
   createCustomCategoryAction: vi.fn(),
 }));
 
-describe("TransactionForm (Multi-Step Wizard - Slice 2)", () => {
+describe("TransactionForm (Multi-Step Wizard - Slice 3)", () => {
   const mockAccounts = [
     { id: "acc-1", name: "Girokonto", type: "giro" as const, currentValue: "1000.00" },
     { id: "acc-2", name: "Bargeld", type: "cash" as const, currentValue: "150.00" },
@@ -18,13 +18,23 @@ describe("TransactionForm (Multi-Step Wizard - Slice 2)", () => {
     { id: "cat-2", name: "Tanken", icon: "gas-pump", isSystem: true, householdId: null },
   ];
 
-  it("renders wizard header with 'Schritt 1 von 4', 'Abbrechen' link, no 'Zurück' button on step 1, and no redundant 'Neue Transaktion' heading", () => {
+  it("renders wizard header with 'Schritt 1 von 4' and progress bar, and bottom action bar with Weiter and Abbrechen (no Zurück in Step 1)", () => {
     render(<TransactionForm accounts={mockAccounts} categories={mockCategories} />);
 
     expect(screen.getByText("Schritt 1 von 4")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Abbrechen" })).toHaveAttribute("href", "/");
-    expect(screen.queryByRole("button", { name: "Zurück" })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Neue Transaktion" })).not.toBeInTheDocument();
+
+    // In step 1: No Zurück button in the DOM
+    expect(screen.queryByRole("button", { name: "Zurück" })).not.toBeInTheDocument();
+
+    // Bottom action bar contains disabled Weiter button and centered Abbrechen link
+    const nextBtn = screen.getByRole("button", { name: "Weiter" });
+    expect(nextBtn).toBeInTheDocument();
+    expect(nextBtn).toBeDisabled();
+
+    const cancelLink = screen.getByRole("link", { name: "Abbrechen" });
+    expect(cancelLink).toBeInTheDocument();
+    expect(cancelLink).toHaveAttribute("href", "/");
   });
 
   it("renders stacked account tiles with name, type badge, and balance, with no default selection and disabled Weiter button", () => {
@@ -54,7 +64,17 @@ describe("TransactionForm (Multi-Step Wizard - Slice 2)", () => {
     fireEvent.click(nextBtn);
 
     expect(screen.getByText("Schritt 2 von 4")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Zurück" })).toBeInTheDocument();
+    
+    // Header should NOT have back button or cancel link
+    const header = screen.getByText("Schritt 2 von 4").closest("[data-wizard-header]");
+    expect(header?.querySelector("button")).toBeNull();
+    expect(header?.querySelector("a")).toBeNull();
+
+    // Bottom action bar has Zurück and Weiter
+    const backBtn = screen.getByRole("button", { name: "Zurück" });
+    expect(backBtn).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Weiter" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Abbrechen" })).toHaveAttribute("href", "/");
   });
 
   it("renders Step 2 with Expense/Income toggle, dynamic formatted cent display, keypad, and back button navigation", () => {
@@ -314,6 +334,58 @@ describe("TransactionForm (Multi-Step Wizard - Slice 2)", () => {
     fireEvent.click(submitBtn);
 
     expect(await screen.findByText("Konto nicht gefunden.")).toBeInTheDocument();
+  });
+
+  it("renders unified action bar with 'Zurück', 'Weiter' / 'Transaktion speichern', and 'Abbrechen' on all steps", () => {
+    render(<TransactionForm accounts={mockAccounts} categories={mockCategories} />);
+
+    // Step 1: No Zurück, only Weiter + Abbrechen
+    expect(screen.queryByRole("button", { name: "Zurück" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Weiter" })).toBeDisabled();
+    expect(screen.getByRole("link", { name: "Abbrechen" })).toHaveAttribute("href", "/");
+
+    // Select account -> Advance to Step 2
+    fireEvent.click(screen.getAllByText("Girokonto")[0]);
+    expect(screen.getByRole("button", { name: "Weiter" })).not.toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    // Step 2: Zurück + Weiter + Abbrechen
+    expect(screen.getByRole("button", { name: "Zurück" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Weiter" })).toBeDisabled();
+    expect(screen.getByRole("link", { name: "Abbrechen" })).toHaveAttribute("href", "/");
+
+    // Enter amount -> Advance to Step 3
+    fireEvent.change(screen.getByTestId("cent-amount-input"), { target: { value: "1000" } });
+    expect(screen.getByRole("button", { name: "Weiter" })).not.toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    // Step 3: Zurück + Weiter + Abbrechen
+    expect(screen.getByRole("button", { name: "Zurück" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Weiter" })).toBeDisabled();
+    expect(screen.getByRole("link", { name: "Abbrechen" })).toHaveAttribute("href", "/");
+
+    // Select category -> Advance to Step 4
+    fireEvent.click(screen.getByRole("button", { name: /Lebensmittel/i }));
+    expect(screen.getByRole("button", { name: "Weiter" })).not.toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    // Step 4: Zurück + Transaktion speichern + Abbrechen
+    expect(screen.getByRole("button", { name: "Zurück" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Transaktion speichern" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Abbrechen" })).toHaveAttribute("href", "/");
+
+    // Click Zurück from Step 4 -> returns to Step 3
+    fireEvent.click(screen.getByRole("button", { name: "Zurück" }));
+    expect(screen.getByText("Schritt 3 von 4")).toBeInTheDocument();
+
+    // Click Zurück from Step 3 -> returns to Step 2
+    fireEvent.click(screen.getByRole("button", { name: "Zurück" }));
+    expect(screen.getByText("Schritt 2 von 4")).toBeInTheDocument();
+
+    // Click Zurück from Step 2 -> returns to Step 1
+    fireEvent.click(screen.getByRole("button", { name: "Zurück" }));
+    expect(screen.getByText("Schritt 1 von 4")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Zurück" })).not.toBeInTheDocument();
   });
 });
 
