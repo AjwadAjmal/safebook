@@ -719,8 +719,6 @@ describe("TransactionForm (Multi-Step Wizard - Slice 3)", () => {
     // Verify wizard is now on Step 4 and NO submission occurred
     expect(screen.getByText("Schritt 4 von 4")).toBeInTheDocument();
     expect(screen.getByText("Zusammenfassung")).toBeInTheDocument();
-    expect(createTransactionAction).not.toHaveBeenCalled();
-
     // Verify "Transaktion speichern" button is rendered with explicit key/role
     const saveBtn = screen.getByRole("button", { name: "Transaktion speichern" });
     expect(saveBtn).toBeInTheDocument();
@@ -729,6 +727,163 @@ describe("TransactionForm (Multi-Step Wizard - Slice 3)", () => {
     // Explicit click on "Transaktion speichern" now submits
     fireEvent.click(saveBtn);
     expect(createTransactionAction).toHaveBeenCalledTimes(1);
+  });
+
+  it("supports a full multi-edit roundtrip modifying all 5 fields sequentially and submits with description", async () => {
+    const { createTransactionAction } = await import("@/lib/actions/transaction");
+    vi.mocked(createTransactionAction).mockClear();
+    vi.mocked(createTransactionAction).mockResolvedValueOnce({});
+
+    render(<TransactionForm accounts={mockAccounts} categories={mockCategories} />);
+
+    // Initial flow: Step 1 (Girokonto) -> Step 2 (Expense, 10,00 €) -> Step 3 (Lebensmittel) -> Step 4
+    fireEvent.click(screen.getAllByText("Girokonto")[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    fireEvent.change(screen.getByTestId("cent-amount-input"), { target: { value: "1000" } });
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    fireEvent.click(screen.getByRole("button", { name: /Lebensmittel/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    expect(screen.getByText("Schritt 4 von 4")).toBeInTheDocument();
+
+    // 1. Edit Account: Switch to Bargeld
+    fireEvent.click(screen.getByRole("button", { name: "Konto bearbeiten" }));
+    expect(screen.getByText("Schritt 1 von 4")).toBeInTheDocument();
+    fireEvent.click(screen.getAllByText("Bargeld")[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Zur Zusammenfassung" }));
+    expect(screen.getByText("Schritt 4 von 4")).toBeInTheDocument();
+    expect(screen.getAllByText("Bargeld").length).toBeGreaterThan(0);
+
+    // 2. Edit Type: Switch to Einnahme
+    fireEvent.click(screen.getByRole("button", { name: "Typ bearbeiten" }));
+    expect(screen.getByText("Schritt 2 von 4")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Einnahme" }));
+    fireEvent.click(screen.getByRole("button", { name: "Zur Zusammenfassung" }));
+    expect(screen.getByText("Schritt 4 von 4")).toBeInTheDocument();
+    expect(screen.getByText("Einnahme")).toBeInTheDocument();
+
+    // 3. Edit Amount: Change to 125,50 € (12550 cents)
+    fireEvent.click(screen.getByRole("button", { name: "Betrag bearbeiten" }));
+    expect(screen.getByText("Schritt 2 von 4")).toBeInTheDocument();
+    fireEvent.change(screen.getByTestId("cent-amount-input"), { target: { value: "12550" } });
+    fireEvent.click(screen.getByRole("button", { name: "Zur Zusammenfassung" }));
+    expect(screen.getByText("Schritt 4 von 4")).toBeInTheDocument();
+    expect(screen.getByText("+ 125,50 €")).toBeInTheDocument();
+
+    // 4. Edit Date: Change to 2026-05-15
+    fireEvent.click(screen.getByRole("button", { name: "Datum bearbeiten" }));
+    expect(screen.getByText("Schritt 3 von 4")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Datum"), { target: { value: "2026-05-15" } });
+    fireEvent.click(screen.getByRole("button", { name: "Zur Zusammenfassung" }));
+    expect(screen.getByText("Schritt 4 von 4")).toBeInTheDocument();
+    expect(screen.getByText("15.05.2026")).toBeInTheDocument();
+
+    // 5. Edit Category: Switch to Tanken
+    fireEvent.click(screen.getByRole("button", { name: "Kategorie bearbeiten" }));
+    expect(screen.getByText("Schritt 3 von 4")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Tanken/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Zur Zusammenfassung" }));
+    expect(screen.getByText("Schritt 4 von 4")).toBeInTheDocument();
+    expect(screen.getByText(/Tanken/i)).toBeInTheDocument();
+
+    // Add optional description and submit
+    fireEvent.change(screen.getByLabelText("Beschreibung (optional)"), {
+      target: { value: "Rückerstattung Tankkosten" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Transaktion speichern" }));
+
+    expect(createTransactionAction).toHaveBeenCalledTimes(1);
+    expect(createTransactionAction).toHaveBeenCalledWith({
+      type: "income",
+      amount: "125.50",
+      description: "Rückerstattung Tankkosten",
+      date: "2026-05-15",
+      accountId: "acc-2",
+      categoryId: "cat-2",
+    });
+  });
+
+  it("supports creating a new category via modal during edit mode and returns directly to Step 4 with new category", async () => {
+    const { createCustomCategoryAction } = await import("@/lib/actions/transaction");
+    vi.mocked(createCustomCategoryAction).mockResolvedValueOnce({
+      category: {
+        id: "cat-edit-99",
+        name: "Fitness",
+        icon: "dumbbell",
+        householdId: "hh-1",
+      },
+    });
+
+    render(<TransactionForm accounts={mockAccounts} categories={mockCategories} />);
+
+    // Initial flow to Step 4
+    fireEvent.click(screen.getAllByText("Girokonto")[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    fireEvent.change(screen.getByTestId("cent-amount-input"), { target: { value: "3000" } });
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    fireEvent.click(screen.getByRole("button", { name: /Lebensmittel/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    expect(screen.getByText("Schritt 4 von 4")).toBeInTheDocument();
+
+    // Click Category edit icon -> Step 3
+    fireEvent.click(screen.getByRole("button", { name: "Kategorie bearbeiten" }));
+    expect(screen.getByText("Schritt 3 von 4")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Zur Zusammenfassung" })).toBeInTheDocument();
+
+    // Open Category Modal
+    fireEvent.click(screen.getByRole("button", { name: "+ Neue Kategorie" }));
+    expect(screen.getByRole("heading", { name: "Kategorie erstellen" })).toBeInTheDocument();
+
+    // Fill category form and submit
+    fireEvent.change(screen.getByLabelText("Kategoriename"), { target: { value: "Fitness" } });
+    fireEvent.click(screen.getByRole("button", { name: "Speichern" }));
+
+    // Wait for new category to appear
+    expect(await screen.findByText("Fitness")).toBeInTheDocument();
+
+    // In edit mode: click "Zur Zusammenfassung" -> jumps directly back to Step 4 with "Fitness"
+    const summaryBtn = screen.getByRole("button", { name: "Zur Zusammenfassung" });
+    fireEvent.click(summaryBtn);
+
+    expect(screen.getByText("Schritt 4 von 4")).toBeInTheDocument();
+    expect(screen.getByText(/Fitness/i)).toBeInTheDocument();
+  });
+
+  it("resets editing mode when clicking 'Zurück' from Step 2 edit mode (Betrag/Typ edit) and restores forward sequential flow", () => {
+    render(<TransactionForm accounts={mockAccounts} categories={mockCategories} />);
+
+    // Initial flow to Step 4
+    fireEvent.click(screen.getAllByText("Girokonto")[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    fireEvent.change(screen.getByTestId("cent-amount-input"), { target: { value: "3000" } });
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    fireEvent.click(screen.getByRole("button", { name: /Lebensmittel/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    expect(screen.getByText("Schritt 4 von 4")).toBeInTheDocument();
+
+    // Click Betrag bearbeiten -> Step 2 in edit mode
+    fireEvent.click(screen.getByRole("button", { name: "Betrag bearbeiten" }));
+    expect(screen.getByText("Schritt 2 von 4")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Zur Zusammenfassung" })).toBeInTheDocument();
+
+    // Click Zurück from Step 2 -> Step 1, isEditing reset
+    fireEvent.click(screen.getByRole("button", { name: "Zurück" }));
+    expect(screen.getByText("Schritt 1 von 4")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Zurück" })).not.toBeInTheDocument();
+
+    // Click Weiter from Step 1 -> arrives on Step 2 with normal "Weiter" button
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+    expect(screen.getByText("Schritt 2 von 4")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Weiter" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Zur Zusammenfassung" })).not.toBeInTheDocument();
   });
 });
 
