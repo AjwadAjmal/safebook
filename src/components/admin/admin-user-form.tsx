@@ -74,7 +74,6 @@ export function AdminUserForm({ onUserCreated, showToast }: AdminUserFormProps) 
             className={`${styles.input} ${
               fieldErrors.username ? styles.inputError : ""
             }`}
-            placeholder="z. B. max.mustermann"
             value={username}
             onChange={(e) => {
               setUsername(e.target.value);
