@@ -80,6 +80,9 @@ Die zusammenhängende Listenansicht in einer gemeinsamen Karte im Dashboard, in 
 **Kategorie** (Category):
 Eine logische Klassifizierung einer Transaktion (z. B. "Tanken", "Lebensmittel", "Gehalt"). Das System bietet vordefinierte Standardkategorien sowie die Möglichkeit, direkt bei der Erfassung eigene haushaltsspezifische Kategorien anzulegen.
 
+**Transaktionszusammenfassung** (Transaction Summary):
+Die finale Übersicht (Schritt 4) im Transaktions-Wizard vor dem Speichern, in der alle erfassten Details (Konto, Typ, Betrag, Datum, Kategorie) in einzelnen Zeilen mit Bearbeiten-Aktionen geprüft und mit einer optionalen Beschreibung versehen werden können.
+
 ### Benutzerverwaltung & Administration (User Management)
 
 **Benutzerverwaltung** (User Management):

@@ -92,4 +92,29 @@ export function isCategoryStepValid(categoryId?: string | null): boolean {
   return typeof categoryId === "string" && categoryId.trim().length > 0;
 }
 
+export function formatGermanDate(isoDate: string): string {
+  if (!isoDate || typeof isoDate !== "string") {
+    return "";
+  }
+  const parts = isoDate.split("-");
+  if (parts.length !== 3) {
+    return "";
+  }
+  const [year, month, day] = parts;
+  if (!year || !month || !day) {
+    return "";
+  }
+  return `${day.padStart(2, "0")}.${month.padStart(2, "0")}.${year}`;
+}
+
+export function formatSignedCentAmount(digits: string, type: "expense" | "income"): string {
+  const formatted = formatCentAmount(digits);
+  const numCents = parseInt(digits || "0", 10);
+  if (isNaN(numCents) || numCents <= 0) {
+    return "0,00 €";
+  }
+  const prefix = type === "expense" ? "- " : "+ ";
+  return `${prefix}${formatted}`;
+}
+
 

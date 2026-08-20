@@ -10,7 +10,9 @@ import {
   centAmountToDecimalString,
   isAccountStepValid,
   isAmountStepValid,
-  isCategoryStepValid
+  isCategoryStepValid,
+  formatGermanDate,
+  formatSignedCentAmount
 } from "./transaction-utils";
 
 test("calculateNewBalance should subtract amount from current balance for expenses", () => {
@@ -107,6 +109,42 @@ test("step validation helpers should accurately validate each wizard step condit
   assert.strictEqual(isCategoryStepValid(""), false);
   assert.strictEqual(isCategoryStepValid(null), false);
   assert.strictEqual(isCategoryStepValid(undefined), false);
+});
+
+test("formatGermanDate should convert ISO date string to DD.MM.YYYY format", () => {
+  assert.strictEqual(formatGermanDate("2026-08-19"), "19.08.2026");
+});
+
+test("formatGermanDate should handle edge cases including single digits, empty strings, and malformed inputs", () => {
+  assert.strictEqual(formatGermanDate("2026-8-9"), "09.08.2026");
+  assert.strictEqual(formatGermanDate("2026-01-05"), "05.01.2026");
+  assert.strictEqual(formatGermanDate(""), "");
+  assert.strictEqual(formatGermanDate("invalid-date"), "");
+  assert.strictEqual(formatGermanDate("2026-12"), "");
+  assert.strictEqual(formatGermanDate(null as unknown as string), "");
+  assert.strictEqual(formatGermanDate(undefined as unknown as string), "");
+});
+
+test("formatSignedCentAmount should format expense amounts with a minus sign and currency", () => {
+  assert.strictEqual(formatSignedCentAmount("2500", "expense"), "- 25,00 €");
+  assert.strictEqual(formatSignedCentAmount("50", "expense"), "- 0,50 €");
+});
+
+test("formatSignedCentAmount should format income amounts with a plus sign and currency", () => {
+  assert.strictEqual(formatSignedCentAmount("2500", "income"), "+ 25,00 €");
+  assert.strictEqual(formatSignedCentAmount("50", "income"), "+ 0,50 €");
+});
+
+test("formatSignedCentAmount should handle zero, empty, invalid inputs and large amounts with thousand separators", () => {
+  assert.strictEqual(formatSignedCentAmount("0", "expense"), "0,00 €");
+  assert.strictEqual(formatSignedCentAmount("0", "income"), "0,00 €");
+  assert.strictEqual(formatSignedCentAmount("", "expense"), "0,00 €");
+  assert.strictEqual(formatSignedCentAmount("", "income"), "0,00 €");
+  assert.strictEqual(formatSignedCentAmount("abc", "expense"), "0,00 €");
+  assert.strictEqual(formatSignedCentAmount(null as unknown as string, "expense"), "0,00 €");
+  assert.strictEqual(formatSignedCentAmount(undefined as unknown as string, "income"), "0,00 €");
+  assert.strictEqual(formatSignedCentAmount("12345678", "expense"), "- 123.456,78 €");
+  assert.strictEqual(formatSignedCentAmount("12345678", "income"), "+ 123.456,78 €");
 });
 
 
