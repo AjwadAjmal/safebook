@@ -523,6 +523,109 @@ describe("TransactionForm (Multi-Step Wizard - Slice 3)", () => {
     expect(screen.getByText("Schritt 1 von 4")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Zurück" })).not.toBeInTheDocument();
   });
+
+  it("blocks form submission when currentStep !== 4 even if all step inputs are filled", async () => {
+    const { createTransactionAction } = await import("@/lib/actions/transaction");
+    vi.mocked(createTransactionAction).mockClear();
+
+    const { container } = render(<TransactionForm accounts={mockAccounts} categories={mockCategories} />);
+    const form = container.querySelector("form")!;
+
+    // Step 1: select Girokonto
+    fireEvent.click(screen.getAllByText("Girokonto")[0]);
+    // Try submitting form in Step 1
+    fireEvent.submit(form);
+    expect(createTransactionAction).not.toHaveBeenCalled();
+
+    // Advance to Step 2
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+    expect(screen.getByText("Schritt 2 von 4")).toBeInTheDocument();
+    fireEvent.change(screen.getByTestId("cent-amount-input"), { target: { value: "2500" } });
+    // Try submitting form in Step 2
+    fireEvent.submit(form);
+    expect(createTransactionAction).not.toHaveBeenCalled();
+
+    // Advance to Step 3
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+    expect(screen.getByText("Schritt 3 von 4")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Lebensmittel/i }));
+    // Try submitting form in Step 3 (all fields accountId, centAmount, categoryId are now valid!)
+    fireEvent.submit(form);
+    expect(createTransactionAction).not.toHaveBeenCalled();
+  });
+
+  it("prevents form submission when pressing Enter key in input fields during steps 1 to 3", async () => {
+    const { createTransactionAction } = await import("@/lib/actions/transaction");
+    vi.mocked(createTransactionAction).mockClear();
+
+    render(<TransactionForm accounts={mockAccounts} categories={mockCategories} />);
+
+    // Step 1: Select Girokonto & advance
+    fireEvent.click(screen.getAllByText("Girokonto")[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    // Step 2: Press Enter inside cent amount input
+    const amountInput = screen.getByTestId("cent-amount-input");
+    fireEvent.change(amountInput, { target: { value: "3000" } });
+    const enterKeyDownEvent = fireEvent.keyDown(amountInput, { key: "Enter", code: "Enter", charCode: 13 });
+    expect(enterKeyDownEvent).toBe(false); // default was prevented
+    expect(createTransactionAction).not.toHaveBeenCalled();
+    expect(screen.getByText("Schritt 2 von 4")).toBeInTheDocument();
+
+    // Advance to Step 3
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+    expect(screen.getByText("Schritt 3 von 4")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Lebensmittel/i }));
+
+    // Step 3: Press Enter inside date input
+    const dateInput = screen.getByLabelText("Datum");
+    const dateEnterEvent = fireEvent.keyDown(dateInput, { key: "Enter", code: "Enter", charCode: 13 });
+    expect(dateEnterEvent).toBe(false); // default was prevented
+    expect(createTransactionAction).not.toHaveBeenCalled();
+    expect(screen.getByText("Schritt 3 von 4")).toBeInTheDocument();
+  });
+
+  it("transitions safely from Step 3 to Step 4 on 'Weiter' click without triggering submission, requiring explicit click on 'Transaktion speichern'", async () => {
+    const { createTransactionAction } = await import("@/lib/actions/transaction");
+    vi.mocked(createTransactionAction).mockClear();
+
+    render(<TransactionForm accounts={mockAccounts} categories={mockCategories} />);
+
+    // Step 1: select Girokonto
+    fireEvent.click(screen.getAllByText("Girokonto")[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    // Step 2: enter amount 4200 (42,00 €)
+    fireEvent.change(screen.getByTestId("cent-amount-input"), { target: { value: "4200" } });
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    // Step 3: select category Tanken
+    expect(screen.getByText("Schritt 3 von 4")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Tanken/i }));
+
+    const nextBtn = screen.getByRole("button", { name: "Weiter" });
+    expect(nextBtn).not.toBeDisabled();
+
+    // Click "Weiter" to go from Step 3 to Step 4
+    fireEvent.click(nextBtn);
+
+    // Verify wizard is now on Step 4 and NO submission occurred
+    expect(screen.getByText("Schritt 4 von 4")).toBeInTheDocument();
+    expect(screen.getByText("Zusammenfassung")).toBeInTheDocument();
+    expect(createTransactionAction).not.toHaveBeenCalled();
+
+    // Verify "Transaktion speichern" button is rendered with explicit key/role
+    const saveBtn = screen.getByRole("button", { name: "Transaktion speichern" });
+    expect(saveBtn).toBeInTheDocument();
+    expect(createTransactionAction).not.toHaveBeenCalled();
+
+    // Explicit click on "Transaktion speichern" now submits
+    fireEvent.click(saveBtn);
+    expect(createTransactionAction).toHaveBeenCalledTimes(1);
+  });
 });
+
+
+
 
 

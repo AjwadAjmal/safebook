@@ -85,6 +85,10 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
     e.preventDefault();
     setError(null);
 
+    if (currentStep !== 4) {
+      return;
+    }
+
     if (!isAccountStepValid(accountId)) {
       setError("Bitte ein Konto auswählen.");
       return;
@@ -127,6 +131,12 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+    if (e.key === "Enter" && currentStep !== 4) {
+      e.preventDefault();
+    }
+  };
+
   const selectedAccount = accounts.find((a) => a.id === accountId);
   const selectedCategory = categories.find((c) => c.id === categoryId);
 
@@ -145,7 +155,11 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
 
   return (
     <>
-      <form className={styles.formContainer} onSubmit={handleSubmit}>
+      <form
+        className={styles.formContainer}
+        onSubmit={handleSubmit}
+        onKeyDown={handleKeyDown}
+      >
         {/* Wizard Progress Header */}
         <div className={styles.headerContainer} data-wizard-header>
           <span className={styles.stepIndicator}>Schritt {currentStep} von 4</span>
@@ -421,6 +435,7 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
           <div className={styles.buttonRow}>
             {currentStep > 1 && (
               <button
+                key="btn-back"
                 type="button"
                 className={styles.secondaryBtn}
                 onClick={() => {
@@ -434,6 +449,7 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
 
             {currentStep === 4 ? (
               <button
+                key="btn-submit"
                 type="submit"
                 className={styles.primaryBtn}
                 disabled={isSubmitting}
@@ -442,6 +458,7 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
               </button>
             ) : isEditing ? (
               <button
+                key="btn-summary"
                 type="button"
                 className={styles.primaryBtn}
                 disabled={!isCurrentStepValid()}
@@ -454,6 +471,7 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
               </button>
             ) : (
               <button
+                key="btn-next"
                 type="button"
                 className={styles.primaryBtn}
                 disabled={!isCurrentStepValid()}
