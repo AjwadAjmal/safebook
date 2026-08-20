@@ -199,7 +199,7 @@ describe("TransactionForm (Multi-Step Wizard - Slice 3)", () => {
     expect(nextBtn).not.toBeDisabled();
   });
 
-  it("renders Step 4 Summary Card displaying selected Account, Amount/Type, Date/Category, and Edit buttons (✏️)", () => {
+  it("renders Step 4 Summary Card displaying 5 distinct rows for Account, Type, Amount, Date, and Category with Edit buttons (✏️)", () => {
     render(<TransactionForm accounts={mockAccounts} categories={mockCategories} />);
 
     // Step 1: Select Girokonto
@@ -219,15 +219,59 @@ describe("TransactionForm (Multi-Step Wizard - Slice 3)", () => {
     expect(screen.getByText("Schritt 4 von 4")).toBeInTheDocument();
     expect(screen.getByText("Zusammenfassung")).toBeInTheDocument();
 
-    expect(screen.getByText("Girokonto")).toBeInTheDocument();
-    expect(screen.getByText(/25,00 € \(Ausgabe\)/i)).toBeInTheDocument();
-    expect(screen.getByText(/Lebensmittel/i)).toBeInTheDocument();
+    // 1. Row: Konto (Name + Type Badge + Edit Button)
+    expect(screen.getByText("Konto")).toBeInTheDocument();
+    expect(screen.getAllByText("Girokonto").length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: "Konto bearbeiten" })).toBeInTheDocument();
 
-    expect(screen.getByRole("button", { name: /konto bearbeiten/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /betrag bearbeiten/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /kategorie bearbeiten/i })).toBeInTheDocument();
+    // 2. Row: Typ (Type Badge + Edit Button)
+    expect(screen.getByText("Typ")).toBeInTheDocument();
+    expect(screen.getByText("Ausgabe")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Typ bearbeiten" })).toBeInTheDocument();
+
+    // 3. Row: Betrag (Signed formatted amount + Edit Button)
+    expect(screen.getByText("Betrag")).toBeInTheDocument();
+    expect(screen.getByText("- 25,00 €")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Betrag bearbeiten" })).toBeInTheDocument();
+
+    // 4. Row: Datum (Formatted German date + Edit Button)
+    expect(screen.getByText("Datum")).toBeInTheDocument();
+    const today = new Date();
+    const expectedGermanDate = `${String(today.getDate()).padStart(2, "0")}.${String(today.getMonth() + 1).padStart(2, "0")}.${today.getFullYear()}`;
+    expect(screen.getByText(expectedGermanDate)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Datum bearbeiten" })).toBeInTheDocument();
+
+    // 5. Row: Kategorie (Icon + Name + Edit Button)
+    expect(screen.getByText("Kategorie")).toBeInTheDocument();
+    expect(screen.getByText(/Lebensmittel/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Kategorie bearbeiten" })).toBeInTheDocument();
+
+    // Optional description & Submit button
     expect(screen.getByLabelText("Beschreibung (optional)")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Transaktion speichern" })).toBeInTheDocument();
+  });
+
+  it("renders Step 4 Summary Card with positive sign (+ 50,00 €) and Einnahme badge for income transactions", () => {
+    render(<TransactionForm accounts={mockAccounts} categories={mockCategories} />);
+
+    // Step 1: Select Bargeld
+    fireEvent.click(screen.getAllByText("Bargeld")[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    // Step 2: Toggle to Einnahme and enter amount 5000 (50,00 €)
+    fireEvent.click(screen.getByRole("button", { name: "Einnahme" }));
+    const amountInput = screen.getByTestId("cent-amount-input");
+    fireEvent.change(amountInput, { target: { value: "5000" } });
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    // Step 3: Select category Tanken
+    fireEvent.click(screen.getByRole("button", { name: /Tanken/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    // Step 4
+    expect(screen.getByText("Schritt 4 von 4")).toBeInTheDocument();
+    expect(screen.getByText("Einnahme")).toBeInTheDocument();
+    expect(screen.getByText("+ 50,00 €")).toBeInTheDocument();
   });
 
   it("switches to editing mode when clicking 'Konto bearbeiten' on summary card, displaying 'Zur Zusammenfassung' and jumping directly back to Step 4", () => {
@@ -245,7 +289,7 @@ describe("TransactionForm (Multi-Step Wizard - Slice 3)", () => {
     fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
 
     expect(screen.getByText("Schritt 4 von 4")).toBeInTheDocument();
-    expect(screen.getByText("Girokonto")).toBeInTheDocument();
+    expect(screen.getAllByText("Girokonto").length).toBeGreaterThan(0);
 
     // Click "Konto bearbeiten" -> Jump to Step 1 in edit mode
     fireEvent.click(screen.getByRole("button", { name: /konto bearbeiten/i }));
@@ -259,10 +303,10 @@ describe("TransactionForm (Multi-Step Wizard - Slice 3)", () => {
 
     // Should be back at Step 4 with updated account
     expect(screen.getByText("Schritt 4 von 4")).toBeInTheDocument();
-    expect(screen.getByText("Bargeld")).toBeInTheDocument();
+    expect(screen.getAllByText("Bargeld").length).toBeGreaterThan(0);
   });
 
-  it("switches to editing mode when clicking 'Betrag bearbeiten' on summary card, displaying 'Zur Zusammenfassung' and jumping directly back to Step 4 with updated amount and type", () => {
+  it("switches to editing mode when clicking 'Typ bearbeiten' on summary card, displaying 'Zur Zusammenfassung' and jumping directly back to Step 4", () => {
     render(<TransactionForm accounts={mockAccounts} categories={mockCategories} />);
 
     // Step 1 -> Step 2 -> Step 3 -> Step 4
@@ -277,7 +321,40 @@ describe("TransactionForm (Multi-Step Wizard - Slice 3)", () => {
     fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
 
     expect(screen.getByText("Schritt 4 von 4")).toBeInTheDocument();
-    expect(screen.getByText(/10,00 € \(Ausgabe\)/i)).toBeInTheDocument();
+    expect(screen.getByText("Ausgabe")).toBeInTheDocument();
+    expect(screen.getByText("- 10,00 €")).toBeInTheDocument();
+
+    // Click "Typ bearbeiten" -> Jump to Step 2 in edit mode
+    fireEvent.click(screen.getByRole("button", { name: /typ bearbeiten/i }));
+    expect(screen.getByText("Schritt 2 von 4")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Zur Zusammenfassung" })).toBeInTheDocument();
+
+    // Toggle to Einnahme
+    fireEvent.click(screen.getByRole("button", { name: "Einnahme" }));
+
+    // Click "Zur Zusammenfassung" -> jumps directly back to Step 4
+    fireEvent.click(screen.getByRole("button", { name: "Zur Zusammenfassung" }));
+    expect(screen.getByText("Schritt 4 von 4")).toBeInTheDocument();
+    expect(screen.getByText("Einnahme")).toBeInTheDocument();
+    expect(screen.getByText("+ 10,00 €")).toBeInTheDocument();
+  });
+
+  it("switches to editing mode when clicking 'Betrag bearbeiten' on summary card, displaying 'Zur Zusammenfassung' and jumping directly back to Step 4 with updated amount", () => {
+    render(<TransactionForm accounts={mockAccounts} categories={mockCategories} />);
+
+    // Step 1 -> Step 2 -> Step 3 -> Step 4
+    fireEvent.click(screen.getAllByText("Girokonto")[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    const amountInput = screen.getByTestId("cent-amount-input");
+    fireEvent.change(amountInput, { target: { value: "1000" } });
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    fireEvent.click(screen.getByRole("button", { name: /Lebensmittel/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    expect(screen.getByText("Schritt 4 von 4")).toBeInTheDocument();
+    expect(screen.getByText("- 10,00 €")).toBeInTheDocument();
 
     // Click "Betrag bearbeiten" -> Jump to Step 2 in edit mode
     fireEvent.click(screen.getByRole("button", { name: /betrag bearbeiten/i }));
@@ -285,15 +362,45 @@ describe("TransactionForm (Multi-Step Wizard - Slice 3)", () => {
     expect(screen.getByRole("button", { name: "Zur Zusammenfassung" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Weiter" })).not.toBeInTheDocument();
 
-    // Toggle to Einnahme and change amount to 3500 (35,00 €)
-    fireEvent.click(screen.getByRole("button", { name: "Einnahme" }));
+    // Change amount to 3500 (35,00 €)
     const newAmountInput = screen.getByTestId("cent-amount-input");
     fireEvent.change(newAmountInput, { target: { value: "3500" } });
 
     // Click "Zur Zusammenfassung" -> jumps directly back to Step 4
     fireEvent.click(screen.getByRole("button", { name: "Zur Zusammenfassung" }));
     expect(screen.getByText("Schritt 4 von 4")).toBeInTheDocument();
-    expect(screen.getByText(/35,00 € \(Einnahme\)/i)).toBeInTheDocument();
+    expect(screen.getByText("- 35,00 €")).toBeInTheDocument();
+  });
+
+  it("switches to editing mode when clicking 'Datum bearbeiten' on summary card, displaying 'Zur Zusammenfassung' and jumping directly back to Step 4", () => {
+    render(<TransactionForm accounts={mockAccounts} categories={mockCategories} />);
+
+    // Step 1 -> Step 2 -> Step 3 -> Step 4
+    fireEvent.click(screen.getAllByText("Girokonto")[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    const amountInput = screen.getByTestId("cent-amount-input");
+    fireEvent.change(amountInput, { target: { value: "1000" } });
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    fireEvent.click(screen.getByRole("button", { name: /Lebensmittel/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+
+    expect(screen.getByText("Schritt 4 von 4")).toBeInTheDocument();
+
+    // Click "Datum bearbeiten" -> Jump to Step 3 in edit mode
+    fireEvent.click(screen.getByRole("button", { name: /datum bearbeiten/i }));
+    expect(screen.getByText("Schritt 3 von 4")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Zur Zusammenfassung" })).toBeInTheDocument();
+
+    // Change date to 2026-12-24
+    const dateInput = screen.getByLabelText("Datum");
+    fireEvent.change(dateInput, { target: { value: "2026-12-24" } });
+
+    // Click "Zur Zusammenfassung" -> jumps directly back to Step 4
+    fireEvent.click(screen.getByRole("button", { name: "Zur Zusammenfassung" }));
+    expect(screen.getByText("Schritt 4 von 4")).toBeInTheDocument();
+    expect(screen.getByText("24.12.2026")).toBeInTheDocument();
   });
 
   it("switches to editing mode when clicking 'Kategorie bearbeiten' on summary card, displaying 'Zur Zusammenfassung' and jumping directly back to Step 4 with updated category", () => {
@@ -367,7 +474,7 @@ describe("TransactionForm (Multi-Step Wizard - Slice 3)", () => {
     // Jump back to summary
     fireEvent.click(summaryBtn);
     expect(screen.getByText("Schritt 4 von 4")).toBeInTheDocument();
-    expect(screen.getByText(/5,00 € \(Ausgabe\)/i)).toBeInTheDocument();
+    expect(screen.getByText("- 5,00 €")).toBeInTheDocument();
   });
 
   it("resets editing mode when clicking 'Zurück', restoring normal sequential navigation", () => {

@@ -12,6 +12,8 @@ import {
   isAccountStepValid,
   isAmountStepValid,
   isCategoryStepValid,
+  formatGermanDate,
+  formatSignedCentAmount,
 } from "@/lib/transaction-utils";
 import { CategoryModal, getCategoryEmoji } from "./category-modal";
 
@@ -355,10 +357,18 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
             <h2 className={styles.stepTitle}>Zusammenfassung</h2>
 
             <div className={styles.summaryCard}>
+              {/* 1. Row: Konto */}
               <div className={styles.summaryRow}>
                 <div>
                   <span className={styles.summaryLabel}>Konto</span>
-                  <div className={styles.summaryValue}>{selectedAccount?.name}</div>
+                  <div className={styles.summaryAccountContent}>
+                    <span className={styles.summaryValue}>{selectedAccount?.name}</span>
+                    {selectedAccount && (
+                      <span className={styles.accountTypeBadge}>
+                        {formatAccountTypeLabel(selectedAccount.type)}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <button
                   type="button"
@@ -373,11 +383,39 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
                 </button>
               </div>
 
+              {/* 2. Row: Typ */}
               <div className={styles.summaryRow}>
                 <div>
-                  <span className={styles.summaryLabel}>Betrag & Typ</span>
+                  <span className={styles.summaryLabel}>Typ</span>
+                  <div>
+                    <span
+                      className={`${styles.typeBadge} ${
+                        type === "expense" ? styles.typeBadgeExpense : styles.typeBadgeIncome
+                      }`}
+                    >
+                      {type === "expense" ? "Ausgabe" : "Einnahme"}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  aria-label="Typ bearbeiten"
+                  className={styles.editStepBtn}
+                  onClick={() => {
+                    setCurrentStep(2);
+                    setIsEditing(true);
+                  }}
+                >
+                  ✏️
+                </button>
+              </div>
+
+              {/* 3. Row: Betrag */}
+              <div className={styles.summaryRow}>
+                <div>
+                  <span className={styles.summaryLabel}>Betrag</span>
                   <div className={`${styles.summaryValue} tabular-nums`}>
-                    {formatCentAmount(centAmount)} ({type === "expense" ? "Ausgabe" : "Einnahme"})
+                    {formatSignedCentAmount(centAmount, type)}
                   </div>
                 </div>
                 <button
@@ -393,9 +431,31 @@ export function TransactionForm({ accounts, categories: initialCategories }: Tra
                 </button>
               </div>
 
+              {/* 4. Row: Datum */}
               <div className={styles.summaryRow}>
                 <div>
-                  <span className={styles.summaryLabel}>Datum & Kategorie</span>
+                  <span className={styles.summaryLabel}>Datum</span>
+                  <div className={styles.summaryValue}>
+                    {formatGermanDate(date)}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  aria-label="Datum bearbeiten"
+                  className={styles.editStepBtn}
+                  onClick={() => {
+                    setCurrentStep(3);
+                    setIsEditing(true);
+                  }}
+                >
+                  ✏️
+                </button>
+              </div>
+
+              {/* 5. Row: Kategorie */}
+              <div className={styles.summaryRow}>
+                <div>
+                  <span className={styles.summaryLabel}>Kategorie</span>
                   <div className={styles.summaryValue}>
                     {selectedCategory ? `${getCategoryEmoji(selectedCategory.icon)} ${selectedCategory.name}` : ""}
                   </div>
